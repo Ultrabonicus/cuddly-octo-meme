@@ -1,0 +1,26 @@
+
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.cache-tests
+.cache-main
+.classpath
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+*.sc
+*.ws
+.tern-project
+.project
+.settings/org.eclipse.core.resources.prefs
