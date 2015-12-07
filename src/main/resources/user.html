@@ -8,16 +8,16 @@
 <script src="assets/quizAppUser.js"></script>
 <body>
 
-	<div class="someclass" ng-controller="ButtonController">
-	<button ng-click="clickMe()">Somebutton</button>
-	Id: <input ng-model="id" type="text"/>
-	</div>
-	<br/>
-
 	<div class="someclass2" ng-controller="Ctrl">
-		<table ng-repeat="x in quiz.assigments">
+		<div class="someclass" ng-Hide="connectionInfo.hide">
+			<button ng-click="connectionInfo.connect()">Somebutton</button>
+				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
+				userId: <input ng-model="connectionInfo.userId" type="number"/>
+		</div>
+		<br/>
+		<table>
 			assigment {{ quiz.id }}
-			<tr>
+			<tr ng-repeat="x in quiz.assigments">
 				<td> {{ x.queston.content }} </td>
 				<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> </td>
 				

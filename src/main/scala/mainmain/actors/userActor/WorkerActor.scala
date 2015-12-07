@@ -107,6 +107,7 @@ class Worker(id:Int) extends Actor with ActorLogging {
 		}
 		//from endpoint
 		case WorkerPullFilledUserAnswers => {
+		  log.info("sendig pulled user answers")
 		  sender ! EndpointFilledUserAnswers(answersStatus.foldLeft[Seq[FilledUserAnswer]](Seq.empty){(acc,x) => 
 		    x.filledUserAnswer match {
 		      case Some(z) => acc.+:(z)

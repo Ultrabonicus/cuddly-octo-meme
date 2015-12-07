@@ -60,14 +60,14 @@ class WorkerTest extends TestKit(ActorSystem("ClientTest")) with SpecificationLi
 				}
 				true
 			}
-			"And get result after Complete" >> {
+/*			"And get result after Complete" >> {
 				probe.send(worker, WorkerStatus)
 				within(3.seconds){
 					probe.receiveOne(2.seconds) match {
 						case CompleteStatus(_,status) => println(status) ; status.contains(1,Some(true)) && status.contains(2,None) 
 					}
 				}
-			}
+			}*/
 		}
 	
 	def afterAll = shutdown(system)

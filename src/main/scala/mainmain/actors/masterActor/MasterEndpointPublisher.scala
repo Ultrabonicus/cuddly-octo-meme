@@ -73,11 +73,29 @@ class MasterEndpointPublisher(supervisor:Int) extends Actor with ActorPublisher[
 	  def parseJson(message:MasterMessage):TextMessage = {
 	    // TODO
 	    message match {
-	      case action:Action => log.info("Sending action '" + action.code + "' to client"); TextMessage(action.toJson.compactPrint)
+	      case action:Action => {
+	        log.info("Sending action '" + action.code + "' to client")
+	        case class ActionWS(load:Action ,code:Int)
+	        implicit val actionWSFormat = jsonFormat2(ActionWS.apply)
+	        val jsobject = ActionWS(action, 1101)
+	        TextMessage(jsobject.toJson.compactPrint)
+	      }
 	      
-	      case quizStatusSeq:QuizAnswerStatusSeq => log.info("Sending StatusSeq to client"); TextMessage(quizStatusSeq.toJson.compactPrint)
+	      case quizStatusSeq:QuizAnswerStatusSeq => {
+	        log.info("Sending StatusSeq to client")
+	        case class QuizAnswerStatusWS(load:QuizAnswerStatusSeq ,code:Int)
+	        implicit val quizWSFormat = jsonFormat2(QuizAnswerStatusWS.apply)
+	        val jsobject = QuizAnswerStatusWS(quizStatusSeq, 1103)
+	        TextMessage(jsobject.toJson.compactPrint)
+	      }
 	    
-	      case newQuiz:NewQuiz => log.info("Sending NewQuiz to client"); TextMessage(newQuiz.toJson.compactPrint)
+	      case newQuiz:NewQuiz => {
+	        log.info("Sending NewQuiz to client")
+	        case class NewQuizWS(load:NewQuiz ,code:Int)
+	        implicit val quizWSFormat = jsonFormat2(NewQuizWS.apply)
+	        val jsobject = NewQuizWS(newQuiz, 1102)
+	        TextMessage(jsobject.toJson.compactPrint)
+	      }
 	    }
 	  }
   

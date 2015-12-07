@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.ws.TextMessage
 import akka.actor.actorRef2Scala
 import akka.stream.actor.ActorPublisherMessage
 import mainmain.actors.userActor.EndpointActorMessage.EndpointRegisterPublisher
+import scala.annotation.tailrec
 
 object EndpointPublisherMessages {
   	final case class WSPublish(msg: UserMessage)
@@ -46,23 +47,28 @@ class EndpointPublisher(supervisor:Int, id: Int) extends Actor with ActorPublish
 	  var buf:List[UserMessage] = List.empty
 	  
 	  def receive = {
-	    case WSPublish(msg) => log.info("wspblsh")
+	    case WSPublish(msg) => log.info("wspblsh " + msg)
 	      if (buf.isEmpty && totalDemand > 0){
 	        sender() ! WSPublished
 	        onNext(parseJson(msg))
 	      }
 	      else { 
 	        sender() ! WSAccepted
-	        buf = buf ++ List(msg)
+	        buf = buf.:+(msg)
 	      }
 	    case Request(_) =>
-	      if(!buf.isEmpty){
-	        log.info("Sending from buffer")
-	        onNext(parseJson(buf.head))
-	        buf = buf.tail
-	      }
+	      sendFromBuffer
 	    case Cancel =>
 	      context.stop(self)
+	  }
+	  
+	  @tailrec final def sendFromBuffer:Unit = {
+	    if (!buf.isEmpty && totalDemand > 0){
+	      log.info("Sending from buffer")
+	      onNext(parseJson(buf.head))
+	      buf = buf.tail
+	      sendFromBuffer
+	    }
 	  }
 	  
 	  import scala.util.{Try,Success,Failure}
@@ -71,28 +77,28 @@ class EndpointPublisher(supervisor:Int, id: Int) extends Actor with ActorPublish
 	    
 	    message match {
 	      case quiz:UserQuiz => {
-	        log.info("Sending UserQuiz to client with code 101"); 
+	        log.info("Sending UserQuiz to client with code 2101"); 
 	        case class QuizWS(load:UserQuiz ,code:Int)
 	        implicit val quizWSFormat = jsonFormat2(QuizWS.apply)
-	        val jsobject = QuizWS(quiz, 101)
+	        val jsobject = QuizWS(quiz, 2101)
 //	        val jsobject = JsObject.apply(quiz.toJson.asJsObject.fields+(("code",101.toJson.asJsObject)))
 	        TextMessage(jsobject.toJson.compactPrint)
 	      }
 	      
 	      case fmAck:FilledMessagesAck => {
-	        log.info("Sending FilledMessagesAck to client with code 202");
+	        log.info("Sending FilledMessagesAck to client with code 2202");
 	        case class FmAckWS(load:FilledMessagesAck ,code:Int)
 	        implicit val fmAckWSFormat = jsonFormat2(FmAckWS.apply)
-	        val jsobject = FmAckWS(fmAck, 202)
+	        val jsobject = FmAckWS(fmAck, 2202)
 //	        val jsobject = JsObject.apply(fmAck.toJson.asJsObject.fields+(("code",202.toJson.asJsObject)))
 	        TextMessage(jsobject.toJson.compactPrint)
 	      }
 	      
-	      case filledAnswers:FilledUserAnswer => {
-	        log.info("sending FilledUserAnswer to client with code 102");
-	        case class FilledAnswersWS(load:FilledUserAnswer ,code:Int)
-	        implicit val quizWSFormat = jsonFormat2(FilledAnswersWS.apply)
-	        val jsobject = FilledAnswersWS(filledAnswers, 102)
+	      case filledAnswers:FilledUserAnswers => {
+	        log.info("sending FilledUserAnswer to client with code 2102");
+	        case class FilledAnswersWS(load:Seq[FilledUserAnswer] ,code:Int)
+	        implicit val filledAnswerFormat = jsonFormat2(FilledAnswersWS.apply)
+	        val jsobject = FilledAnswersWS(filledAnswers.uanswers, 2102)
 //	        val jsobject = JsObject.apply(filledAnswers.toJson.asJsObject.fields+(("code",102.toJson.asJsObject)))
 	        TextMessage(jsobject.toJson.compactPrint)
 	      }

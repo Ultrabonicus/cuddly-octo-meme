@@ -32,8 +32,8 @@ import akka.event.Logging
 import mainmain.actors.supervisorActor.Supervisor
 import mainmain.actors.userActor.EndpointPublisher
 import mainmain.actors.masterActor.MasterEndpointPublisher
+import akka.http.scaladsl.marshalling.Marshal
 
-object JsonMappings
 
 object Main extends App with Directives with SprayJsonSupport with DefaultJsonProtocol{
 	implicit val asystem = ActorSystem("MySystem")
@@ -54,6 +54,7 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
   implicit val userAssigmentFormat = jsonFormat2(UserAssigment.apply)
   implicit val userQuizFormat = jsonFormat2(UserQuiz.apply)
   implicit val actionFormat = jsonFormat1(Action.apply)
+  implicit val newQuizIdFormat = jsonFormat1(NewQuizId.apply)
 	
   def endpointMasterActorProvider(supervisor: Int):Flow[Message,Message,Any] = {
 	  
@@ -142,7 +143,7 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 
   var supervisors: List[ActorRef] = List.empty
   
-
+  
   
 	val masterRoute = {
 	  path("master"){
@@ -151,9 +152,18 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 	        val newSupervisorActor = asystem.actorOf(Supervisor.props,Supervisor.name + (supervisors.length + 1).toString())
 	        supervisors = newSupervisorActor :: supervisors
 	        newSupervisorActor ! InitializeUsers(newQuiz)
-	        complete(StatusCodes.Accepted)
+//	        complete((StatusCodes.Accepted, Marshal(1)))
+//	        mapResponse (x => x.copy(StatusCodes.Accepted)){
+	   //       completeWith(instanceOf[NewQuizId]){ completionFuncton =>
+	            complete(StatusCodes.Accepted -> NewQuizId(supervisors.length))//,NewQuizId(supervisors.length)))
+	     //     }
+//	        complete(StatusCodes.Accepted)
+	        
 	      }
-	    } 
+	    } ~
+	    get {
+	      getFromResource("master.html")
+	    }
 	  } ~
 	  path("master" / IntNumber) { int1 =>
 	    get { 
@@ -195,6 +205,7 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 }
 
 object Model{
+  case class NewQuizId(quizId:Int)
   case class NewQuiz(quizes:Seq[Quiz]) extends MasterMessage
   case class User(name:String, secondName:String)
   case class Tests(users: Seq[User],tests:Seq[NewQuiz])
@@ -219,6 +230,7 @@ object Model{
 	case class UserQuiz(id:Int, assigments: Seq[UserAssigment]) extends UserMessage
 	case class UserAssigment(queston: Queston, answers:Seq[Answer])
 	case class FilledUserAnswer(queston:Int, answer:Seq[Int]) extends UserMessage
+	case class FilledUserAnswers(uanswers: Seq[FilledUserAnswer]) extends UserMessage
 	case class FilledMessagesAck(listOfAck: Seq[Int]) extends UserMessage
 }
   

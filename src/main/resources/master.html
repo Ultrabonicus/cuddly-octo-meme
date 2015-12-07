@@ -1,9 +1,49 @@
-<html ng-app="quizApp">
+<html ng-app="quizAppMaster">
+<link rel="stylesheet" type="text/css" href="assets/style.css">
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script> 
-<script src="quizApp.js"></script>
+<script src="https://rawgit.com/gdi2290/angular-websocket/v1.0.9/angular-websocket.js"></script>
+<script src="assets/rx.js"></script>
+<script src="assets/rx.async.min.js"></script>
+<script src="assets/rx.binding.min.js"></script>
+<script src="assets/rx.dom.js"></script>
+<script src="assets/rx.angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xls/0.7.5/xls.js"></script>
+<script src="assets/quizAppMaster.js"></script>
 <body>
 
 	<div ng-controller="Ctrl">
+		<div id="dragTarget" ng-hide="hideDrop">
+			<p>Drop here</p>
+		<hr/>
+		</div>
+
+		
+		<div class="someclass" ng-Hide="connectionInfo.hide">
+			<button ng-click="connectionInfo.connect()">Somebutton</button>
+				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
+		</div>
+		
+		<div ng-hide = "sendNewQuiz.hide">
+			<button ng-click="sendNewQuiz.sendNewQuizToServer()">send to server</button>
+		</div>
+		<div>
+		<table ng-repeat="q in newQuiz.quizes">
+			<tr><th colspan = '100'>{{q.id}}</th></tr>
+			<tr>
+				<th> ид </th>
+				<th> Вопрос </th>
+				<th colspan = '100'> Ответы </th>
+			</tr>
+			<tr ng-repeat="x in q.assigments">
+				<td> {{ x.queston.id }} </td>
+				<td> {{ x.queston.content }} </td>
+				<td ng-repeat="answer in x.answers" ng-class="{chosen: answer.isChecked}"> {{ answer.content }} </td>
+				<td> {{ x.solution }} </td>
+			</tr>
+		</table>
+		</div>
+		
+	</div>
 
 </body>
 </html>
