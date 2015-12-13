@@ -10,7 +10,6 @@ import org.specs2.specification._
 import akka.testkit.TestProbe
 import mainmain.actors.userActor.Worker
 import org.specs2.specification.Scope
-//import org.specs2.specification.AllExpectations
 import mainmain._
 import akka.testkit.TestKitBase
 import scala.concurrent.duration._
@@ -18,6 +17,13 @@ import org.specs2.runner.JUnitRunner
 import org.junit.runner.RunWith
 import mainmain.actors.userActor.WorkerMessages._
 import mainmain.Model._
+import mainmain.actors.userActor._
+import akka.testkit.TestActor
+import akka.actor.Actor
+import akka.actor.Props
+import mainmain.actors.userActor.EndpointActorMessage._
+import mainmain.actors.supervisorActor.SupervisorMessages.SupervisorWorkerStatus
+
 
 
 @RunWith(classOf[JUnitRunner])
@@ -41,40 +47,67 @@ class WorkerTest extends TestKit(ActorSystem("ClientTest")) with SpecificationLi
 						Seq(3)
 						)
 					)
-				probe.send(worker, Quiz(1, assigments))
-				within(2.seconds) {
-					probe.receiveOne(max = 1.seconds) match {
-						case UserQuiz(_,_) => true
+				supervisorProbe.send(worker, StartQuiz(Quiz(1, assigments)) )
+				within(FiniteDuration(2,SECONDS)) {
+					endpointProbe.receiveOne(max = FiniteDuration(1,SECONDS)) match {
+						case Start => true
 						case _ => false
 					}
 				}
 			}
 			"accept filled questions " >> {
 				val fa = FilledUserAnswer(1,Seq(2))
-				probe.send(worker, fa)
-				within(2.seconds) {
-					probe.receiveOne(1.seconds) match {
-						case FilledMessagesAck(x) => if (x == List(1)) true else false
+				endpointProbe.send(worker, WorkerFilledUserAnswers(Seq(fa)))
+				within(FiniteDuration(2,SECONDS)) {
+					endpointProbe.receiveOne(FiniteDuration(1,SECONDS)) match {
+						case EndpointFilledAnswersAck(x) =>  if (x == Seq(1)) true else false
 						case _ => false
 					}
 				}
-				true
 			}
-/*			"And get result after Complete" >> {
-				probe.send(worker, WorkerStatus)
-				within(3.seconds){
-					probe.receiveOne(2.seconds) match {
-						case CompleteStatus(_,status) => println(status) ; status.contains(1,Some(true)) && status.contains(2,None) 
+			"Send requested answers to Supervisor" >> {
+				supervisorProbe.send(worker, WorkerStatus)
+				within(FiniteDuration(3,SECONDS)){
+					supervisorProbe.receiveOne(FiniteDuration(2,SECONDS)) match {
+						case SupervisorWorkerStatus(quas) => quas match {
+						  case QuizAnswerStatus(id,answerStatus) => {
+						    answerStatus.forall { x => x.id match {
+						      
+						      case 1 => x.filledUserAnswer.exists { z => z.answer.head === 2 }
+						        
+						      case 2 => x.filledUserAnswer.isEmpty
+						    
+						    }}
+						  }
+						}  
 					}
 				}
-			}*/
+			}
 		}
 	
 	def afterAll = shutdown(system)
 	
 	object cont {
-		val probe = TestProbe()
-		val worker = system.actorOf(Worker.props(1), Worker.name)
+	  
+	  val endpointProbe = TestProbe()
+	  
+	  val supervisorProbe = TestProbe()
+	  
+	  class TestProbeForwarderActor(id:Int) extends Actor {
+	    def receive:Receive = {
+	      case x:Any =>  endpointProbe.ref forward x 
+	    }
+	  }
+	  
+	  sealed trait TestEndpointPropsProvider extends GenericEndpointActorPropsProvider {
+	    val endpointName = "TestEndpoint"
+	    def endpointProps:Int => Props = x => Props(new TestProbeForwarderActor(x))
+	  }
+	  
+	  class TestWorker(id:Int) extends GenericWorker(id) with TestEndpointPropsProvider
+	  
+	  val worker = system.actorOf(Props.apply(new TestWorker(1)), "Worker1")
+	  
 	}
 	
 }

@@ -21,5 +21,7 @@ libraryDependencies ++= Seq(
 	"org.specs2" %% "specs2-core" % "3.6.5" % "test",
 	"org.specs2" %% "specs2-junit" % "3.6.5" % "test",
 	"com.typesafe.akka" %% "akka-testkit" % "2.3.12" % "test",
-	"junit" % "junit" % "4.8.1" % "test"
+	"org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
+	"junit" % "junit" % "4.8.1" % "test",
+	"com.typesafe.akka" %% "akka-http-testkit-experimental" % akkahttpVersion % "test"
 )

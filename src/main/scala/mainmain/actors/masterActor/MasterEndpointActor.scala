@@ -61,12 +61,16 @@ class MasterEndpointActor extends Actor with ActorLogging {
       case 1 => log.info("received MasterGetAll message") ; context.parent ! MasterGetAll
       
       case 2 => log.info("received MasterFinish message") ; context.parent ! MasterFinish
+      
+      case 3 => log.info("received MasterGetNewQuiz message") ; context.parent ! MasterGetNewQuiz
     }
+    
+    case EndpointMasterNewQuiz(nquiz) => log.info("sending newQuiz to publsher"); publisher ! WSMPublish(nquiz)
     
     case x:EndpointMasterActionAck => x match {
       case EndpointMasterActionGetAllAck => log.info("sending MasterActionGetAllAck to publisher"); publisher ! WSMPublish(Action(1))
       
-      case EndpointMasterActionFinishAck => log.info("sendiong MasterActionFinishAck to publisher"); publisher ! WSMPublish(Action(2))
+      case EndpointMasterActionFinishAck => log.info("sending MasterActionFinishAck to publisher"); publisher ! WSMPublish(Action(2))
     }
     
     case EndpointMasterQuizStatus(statusSeq) => log.info("sending quiz status to publisher"); publisher ! WSMPublish(QuizAnswerStatusSeq(statusSeq))
