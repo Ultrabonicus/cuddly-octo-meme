@@ -62,10 +62,14 @@ class EndpointActor(id: Int) extends Actor with ActorLogging {
   def startedWS(publisher:ActorRef): Receive = {
     case EndpointPull => context.parent ! WorkerPull
 
-    case EndpointUserQuiz(quiz) => publisher ! WSPublish(quiz); context.parent ! WorkerPullFilledUserAnswers
+    case EndpointUserQuiz(quiz) => {
+      publisher ! WSPublish(quiz)
+      log.info("pulling filled user answers")
+      context.parent ! WorkerPullFilledUserAnswers
+    }
     
     case EndpointFilledUserAnswers(uanswers) => log.info("received Filled user answers from: " + sender.path); if(context.parent.equals(sender)){
-      publisher ! uanswers
+      publisher ! WSPublish(FilledUserAnswers(uanswers)) ; log.info("sending user answers to publisher")
     } else {
       context.parent ! WorkerFilledUserAnswers(uanswers); log.info("sending user answers to worker") // TODO
     }

@@ -11,6 +11,7 @@ import akka.actor.PoisonPill
 import mainmain.actors.userActor.Worker
 import mainmain.actors.masterActor.MasterActor
 import mainmain.actors.masterActor.MasterActorMessages.MasterQuizStatus
+import mainmain.actors.masterActor.MasterActorMessages.MasterNewQuiz
 
 object SupervisorMessages {
 	case class InitializeUsers(newQuiz: NewQuiz)
@@ -25,6 +26,7 @@ object SupervisorMessages {
 	// master requests
 	case object SupervisorGetFullStatus
   case object SupervisorFinish
+  case object SupervisorGetNewQuiz
 }
 
 object Supervisor {
@@ -61,6 +63,10 @@ class Supervisor extends Actor with ActorLogging {
 	  
 	  case SupervisorFinish => {
 	    log.info("requested to finish"); self ! PoisonPill
+	  }
+	  
+	  case SupervisorGetNewQuiz => {
+	    sender ! MasterNewQuiz(newQuiz)
 	  }
 	}
 	

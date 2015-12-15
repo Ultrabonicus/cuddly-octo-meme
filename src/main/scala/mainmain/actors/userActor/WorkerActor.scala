@@ -40,7 +40,19 @@ object Worker {
 	val name = "Worker"
 }
 
-class Worker(id:Int) extends Actor with ActorLogging {
+trait GenericEndpointActorPropsProvider {
+  def endpointName: String
+  def endpointProps: Int => Props
+}
+
+sealed trait EndpointActorPropsProvider extends GenericEndpointActorPropsProvider{
+  val endpointName: String = EndpointActor.name
+  def endpointProps: Int => Props = EndpointActor.props
+}
+
+class Worker(id:Int) extends GenericWorker(id) with EndpointActorPropsProvider
+
+abstract class GenericWorker(id:Int) extends Actor with ActorLogging with GenericEndpointActorPropsProvider {
 	
 	import WorkerMessages._
 	import EndpointActorMessage._
@@ -48,12 +60,9 @@ class Worker(id:Int) extends Actor with ActorLogging {
 	
 	log.info("created worker")
 	
-	val endpointActor:ActorRef = context.actorOf(EndpointActor.props(id),EndpointActor.name)
-	
-	// 	AnswerStatus(id:Int, right:Int, outOf:Int, filledUserAnswer:FilledUserAnswer)
-	//  FilledUserAnswer(queston:Int, answer:Seq[Int])
-	
-	def working(quiz: Quiz, /*answers:Seq[FilledUserAnswer],*/ answersStatus: Seq[AnswerStatus]):Receive = {
+	def working(quiz: Quiz, answersStatus: Seq[AnswerStatus], endpointActor:ActorRef):Receive = {
+	  
+	  //from endpoint
 		case WorkerFilledUserAnswers(userAnswers) => {
 		  
 		  val newAnswerStatus:Seq[AnswerStatus] = {
@@ -73,29 +82,8 @@ class Worker(id:Int) extends Actor with ActorLogging {
 		    
 		    nas
 		  }
-		  context.become(working(quiz, newAnswerStatus))
+		  context.become(working(quiz, newAnswerStatus, endpointActor))
 			sender ! EndpointFilledAnswersAck(newAnswerStatus.foldLeft[Seq[Int]](Seq.empty)((acc, x) => if(x.filledUserAnswer.isDefined) acc.+:(x.id) else acc))
-		  /*
-			val newAnswers:Seq[FilledUserAnswer] = userAnswers ++ answers.filter(x => userAnswers.find( z => x.queston == z.queston ).isEmpty)
-		  val newStatus:Seq[AnswerStatus] = newAnswers
-//	    .filter(ua => quiz.assigments.find(x => x.queston.id == ua.queston).isDefined)
-		    .foldLeft[Seq[(Int,Boolean)]](Seq.empty){(acc, userAnswer) =>
-		      quiz.assigments.find(x => x.queston.id == userAnswer.queston) match {  
-		        case Some(x) => acc :+ (userAnswer.queston, x.solution == userAnswer.answer)
-				
-		        case None => acc
-				  }
-		    } 
-				val assigment = quiz.assigments.reduceLeft[(Int,Boolean)]{ (acc, x) => 
-				  x.queston.id == userAnswer.queston 
-				  (userAnswer.queston, x.solution == userAnswer.answer) :: acc
-				}
-				assigment match {
-			  		case Some(z) => 
-			  		case None =>  log.error("Unsuitable answer in received FilledUserAnswers")//TODO s
- 				}
-			} */
-			
 		}
 		//from supervisor
 		case WorkerStatus => {
@@ -107,6 +95,7 @@ class Worker(id:Int) extends Actor with ActorLogging {
 		}
 		//from endpoint
 		case WorkerPullFilledUserAnswers => {
+		  log.info("sendig pulled user answers")
 		  sender ! EndpointFilledUserAnswers(answersStatus.foldLeft[Seq[FilledUserAnswer]](Seq.empty){(acc,x) => 
 		    x.filledUserAnswer match {
 		      case Some(z) => acc.+:(z)
@@ -118,8 +107,9 @@ class Worker(id:Int) extends Actor with ActorLogging {
 	val initial:Receive = {
 		case StartQuiz(quiz) => {
 		  log.debug("Received Quiz")
+		  val endpointActor = context.actorOf(endpointProps(id),endpointName)
 		  endpointActor ! Start 
-		  context.become(working(quiz,quiz.assigments.map { x => AnswerStatus(x.queston.id,0,x.solution.length,None) }))
+		  context.become(working(quiz,quiz.assigments.map { x => AnswerStatus(x.queston.id,0,x.solution.length,None) }, endpointActor))
 		}
 		  
 		case x:Any => log.info("unexpected msg before init " + x); sender ! "Something wrong"

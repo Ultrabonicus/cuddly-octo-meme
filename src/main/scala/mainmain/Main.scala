@@ -32,16 +32,21 @@ import akka.event.Logging
 import mainmain.actors.supervisorActor.Supervisor
 import mainmain.actors.userActor.EndpointPublisher
 import mainmain.actors.masterActor.MasterEndpointPublisher
+import akka.http.scaladsl.marshalling.Marshal
+import scala.concurrent.ExecutionContext
+import akka.stream.Materializer
 
-object JsonMappings
 
-object Main extends App with Directives with SprayJsonSupport with DefaultJsonProtocol{
-	implicit val asystem = ActorSystem("MySystem")
-	implicit val mat = ActorMaterializer()
+object Main extends App with Routes with BasicServices {
+
+
+  
 	import HttpMethods._
-	import mat.executionContext
 	
-//	import mainmain.WorkerMessages._
+	Http().bindAndHandle(requestHandler, "localhost",  8080)
+}
+
+object SprayImplicits extends SprayJsonSupport with DefaultJsonProtocol{
   import mainmain.Model._
   
   implicit val answerFormat = jsonFormat2(Answer.apply)
@@ -54,9 +59,19 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
   implicit val userAssigmentFormat = jsonFormat2(UserAssigment.apply)
   implicit val userQuizFormat = jsonFormat2(UserQuiz.apply)
   implicit val actionFormat = jsonFormat1(Action.apply)
-	
-  def endpointMasterActorProvider(supervisor: Int):Flow[Message,Message,Any] = {
+  implicit val newQuizIdFormat = jsonFormat1(NewQuizId.apply)
+}
+
+trait WSFlows{
+  
+  import mainmain.Model._
+  
+  import SprayImplicits._
+  
+  def endpointMasterActorProvider(supervisor: Int)(implicit asystem: ActorSystem, materializer: Materializer):Flow[Message,Message,Any] = {
 	  
+    import materializer.executionContext
+    
 	  val endpointActor:ActorRef = asystem.actorFor("user/Supervisor" + supervisor + "/MasterActor/MasterEndpoint")
 	  
 	  def masterWSGraph = FlowGraph.create() { implicit builder: FlowGraph.Builder[Unit] =>
@@ -69,14 +84,14 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 	    import scala.concurrent.duration._
     	val dur = Duration(10, SECONDS)
     	val flowGetLoad = builder.add(Flow[Message].map[\/[WSFailure,String]] {
-    		case TextMessage.Strict(str) => println("atstrict" + str); \/-(str)
+    		case TextMessage.Strict(str) => \/-(str)
     		case tm:TextMessage => {
     		  val awaitable = tm.textStream
     		        .grouped(Int.MaxValue)
     		        .runWith[Future[String]](Sink.fold[String,Seq[String]]("")((acc, x) => acc ++ x.flatten))
-    		  println("attm" + tm); \/-(Await.result(awaitable, dur))
+    		  \/-(Await.result(awaitable, dur))
     		  }
-    		case z:Any => print("fail\n" + z); -\/(WSFailure("Unsupported message format"))
+    		case z:Any => -\/(WSFailure("Unsupported message format"))
     	})
 	    def tryParseJson(jsvalue: JsValue):EndpointMasterMessage = {
     	  import scala.util.{Try,Success,Failure}
@@ -95,9 +110,11 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 	  wsFlow
 	}
   
-  def endpointActorProvider(supervisor: Int, id: Int):Flow[Message,Message,Any] = {
+  def endpointActorProvider(supervisor: Int, id: Int)(implicit asystem: ActorSystem, materializer: Materializer):Flow[Message,Message,Any] = {
 	  
-  	val endpointActor:ActorRef = asystem.actorFor("user/Supervisor" + supervisor + "/Worker" + id + "/EndpointActor") //getreaderbyid
+    import materializer.executionContext
+    
+  	val endpointActor:ActorRef = asystem.actorFor("user/Supervisor" + supervisor + "/Worker" + id + "/EndpointActor")
 	  
   	def clientWSGraph = FlowGraph.create() { implicit builder: FlowGraph.Builder[Unit] =>
     	import FlowGraph.Implicits._
@@ -110,14 +127,14 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
     	import scala.concurrent.duration._
     	val dur = Duration(10, SECONDS)
     	val flowGetLoad = builder.add(Flow[Message].map[\/[WSFailure,String]] {
-    		case TextMessage.Strict(str) => println("atstrict" + str); \/-(str)
+    		case TextMessage.Strict(str) => \/-(str)
     		case tm:TextMessage => {
     		  val awaitable = tm.textStream
     		        .grouped(Int.MaxValue)
     		        .runWith[Future[String]](Sink.fold[String,Seq[String]]("")((acc, x) => acc ++ x.flatten))
-    		  println("attm" + tm); \/-(Await.result(awaitable, dur))
+    		  \/-(Await.result(awaitable, dur))
     		  }
-    		case z:Any => print("fail\n" + z); -\/(WSFailure("Unsupported message format"))
+    		case z:Any => -\/(WSFailure("Unsupported message format"))
     	})
     	
     	def tryParseJson(jsvalue: JsValue):EndpointMessage = {
@@ -138,26 +155,67 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 
 	  wsFlow
 	}
+  
+}
 
+trait GenericServices {
+  implicit def asystem: ActorSystem
+  
+  implicit def ec: ExecutionContext
+  
+  implicit def mat: Materializer
+}
 
+trait BasicServices extends GenericServices {
+  implicit val asystem = ActorSystem("MySystem")
+	
+  implicit val mat: Materializer = ActorMaterializer()
+  
+  implicit val ec = mat.executionContext
+}
+
+trait Routes extends Directives with WSFlows with GenericServices{
+
+  import mainmain.Model._
+  
+  import SprayImplicits._
+  
+  val requestHandler = DebuggingDirectives.logRequest("request", Logging.InfoLevel) {	
+    pathSingleSlash {
+			get {
+				getFromResource("user.html")
+			}
+		} ~
+		masterRoute ~
+		userRoute ~
+		assetsRoute
+	}
+  
+  val assetsRoute = {
+	  pathPrefix("assets") {
+	    getFromResourceDirectory("public")
+	  }
+	}
+  
   var supervisors: List[ActorRef] = List.empty
   
-
-  
-	val masterRoute = {
+  val masterRoute = {
 	  path("master"){
 	    post {
 	      entity(as[NewQuiz]){ newQuiz =>
 	        val newSupervisorActor = asystem.actorOf(Supervisor.props,Supervisor.name + (supervisors.length + 1).toString())
 	        supervisors = newSupervisorActor :: supervisors
 	        newSupervisorActor ! InitializeUsers(newQuiz)
-	        complete(StatusCodes.Accepted)
+	            complete(StatusCodes.Accepted -> NewQuizId(supervisors.length))
 	      }
-	    } 
+	    } ~
+	    get {
+	      getFromResource("master.html")
+	    }
 	  } ~
 	  path("master" / IntNumber) { int1 =>
 	    get { 
-	      handleWebsocketMessages(endpointMasterActorProvider(int1))
+	      handleWebsocketMessages(endpointMasterActorProvider(int1)(asystem,mat))
 	    }
 	  }
 	}
@@ -169,32 +227,10 @@ object Main extends App with Directives with SprayJsonSupport with DefaultJsonPr
 			}
 		}	
 	}
-	
-	val requestHandler = DebuggingDirectives.logRequest("request", Logging.InfoLevel) {
-	  
-		pathSingleSlash {
-			get {
-				getFromResource("user.html")
-			}
-		} ~
-		masterRoute ~
-		userRoute ~
-		assetsRoute
-	}
-	
-	print("")
-	
-	val assetsRoute = {
-	  pathPrefix("assets") {
-	    getFromResourceDirectory("public")
-	  }
-	}
-		
-	
-	Http().bindAndHandle(requestHandler, "localhost",  8080)
 }
 
 object Model{
+  case class NewQuizId(quizId:Int)
   case class NewQuiz(quizes:Seq[Quiz]) extends MasterMessage
   case class User(name:String, secondName:String)
   case class Tests(users: Seq[User],tests:Seq[NewQuiz])
@@ -210,7 +246,6 @@ object Model{
 	trait MasterMessage
 	case class Action(code:Int) extends MasterMessage
 	case class AnswerStatus(id:Int, right:Int, outOf:Int, filledUserAnswer:Option[FilledUserAnswer])
-//	case class AnswersAndStatus(userAnswer:FilledUserAnswer,answerStatus:AnswerStatus)
 	case class QuizAnswerStatus(userId:Int, status:Seq[AnswerStatus]) 
 	case class QuizAnswerStatusSeq(statusSeq: Seq[QuizAnswerStatus]) extends MasterMessage
 	case class NewQuizStatus(quizAnswerStatus: QuizAnswerStatus)
@@ -219,6 +254,7 @@ object Model{
 	case class UserQuiz(id:Int, assigments: Seq[UserAssigment]) extends UserMessage
 	case class UserAssigment(queston: Queston, answers:Seq[Answer])
 	case class FilledUserAnswer(queston:Int, answer:Seq[Int]) extends UserMessage
+	case class FilledUserAnswers(uanswers: Seq[FilledUserAnswer]) extends UserMessage
 	case class FilledMessagesAck(listOfAck: Seq[Int]) extends UserMessage
 }
   

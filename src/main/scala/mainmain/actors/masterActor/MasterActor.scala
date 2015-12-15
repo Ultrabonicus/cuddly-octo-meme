@@ -6,6 +6,7 @@ import akka.actor.Props
 import akka.actor.ActorLogging
 import mainmain.Model._
 import mainmain.actors.masterActor.MasterEndpointMessages._
+import akka.actor.ActorRef
 object MasterActorMessages{
   
   
@@ -17,7 +18,8 @@ object MasterActorMessages{
   case object MasterGetAll //1
   
   case object MasterFinish //2
-//  case object Start
+  
+  case object MasterGetNewQuiz
   
 }
 
@@ -29,28 +31,47 @@ object MasterActor{
   
 }
 
-class MasterActor extends Actor with ActorLogging {
+trait GenericMasterEndpointActorPropsProvider {
+  def masterEndpointName: String
+  def masterEndpointProps: Props
+  val masterEndpoint: ActorRef
+  
+}
+
+sealed trait EndpointMasterActorPropsProvider extends GenericMasterEndpointActorPropsProvider{
+  val masterEndpointName: String = MasterEndpointActor.name
+  def masterEndpointProps: Props = MasterEndpointActor.props
+  
+}
+
+class MasterActor extends GenericMasterActor with EndpointMasterActorPropsProvider {
+  val masterEndpoint = context.actorOf(MasterEndpointActor.props, MasterEndpointActor.name)
+}
+
+abstract class GenericMasterActor extends Actor with ActorLogging with GenericMasterEndpointActorPropsProvider{
   import MasterActorMessages._
   import mainmain.actors.supervisorActor.SupervisorMessages._
   
-  log.info("Created MasterActor")
-  
-  val masterEndpoint = context.actorOf(MasterEndpointActor.props, MasterEndpointActor.name)
+  log.info("Created MasterActor")    
   
   val started:Receive = {
+    
+    //user messages
+    
     case MasterGetAll => context.parent ! SupervisorGetFullStatus
     
     case MasterFinish => context.parent ! SupervisorFinish
+    
+    case MasterGetNewQuiz => context.parent ! SupervisorGetNewQuiz
+    
+    //supervisor messages
+    
+    case MasterNewQuiz(nquiz) => masterEndpoint ! EndpointMasterNewQuiz(nquiz)
     
     case MasterQuizStatus(statusSeq) => masterEndpoint ! EndpointMasterQuizStatus(statusSeq)
     
     case a => log.error("unexpected msg after start: " + a)
   }
- /* 
-  val initial:Receive = {
-    case a => ???
-  }
- */
   
   var receive = started
 }

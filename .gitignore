@@ -3,6 +3,7 @@
 *.log
 
 # sbt specific
+bin/*
 .cache
 .history
 .lib/

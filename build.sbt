@@ -6,23 +6,6 @@ resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/
 
 scalaVersion := "2.11.7"
 
-lazy val root = (project in file(".")).enablePlugins(SbtWeb)
-
-pipelineStages := Seq(uglify)
-
-includeFilter in uglify := GlobFilter(GlobFilter)
-
-sourceDirectory in Assets := baseDirectory.value / "src" / "main" / "precompiledWebAssets"
-
-webTarget := baseDirectory.value / "src" / "main" / "resources" / "public"
-
-mySorceFileTask := {
-	val sourceDir = (sourceDirectory in Assets).value
-	val targetDir = (webTarget).value 
-	val 
-}
-
-
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 val akkahttpVersion = "2.0-M2"
@@ -38,5 +21,7 @@ libraryDependencies ++= Seq(
 	"org.specs2" %% "specs2-core" % "3.6.5" % "test",
 	"org.specs2" %% "specs2-junit" % "3.6.5" % "test",
 	"com.typesafe.akka" %% "akka-testkit" % "2.3.12" % "test",
-	"junit" % "junit" % "4.8.1" % "test"
+	"org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
+	"junit" % "junit" % "4.8.1" % "test",
+	"com.typesafe.akka" %% "akka-http-testkit-experimental" % akkahttpVersion % "test"
 )
