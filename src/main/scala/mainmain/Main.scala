@@ -246,7 +246,6 @@ object Model{
 	trait MasterMessage
 	case class Action(code:Int) extends MasterMessage
 	case class AnswerStatus(id:Int, right:Int, outOf:Int, filledUserAnswer:Option[FilledUserAnswer])
-//	case class AnswersAndStatus(userAnswer:FilledUserAnswer,answerStatus:AnswerStatus)
 	case class QuizAnswerStatus(userId:Int, status:Seq[AnswerStatus]) 
 	case class QuizAnswerStatusSeq(statusSeq: Seq[QuizAnswerStatus]) extends MasterMessage
 	case class NewQuizStatus(quizAnswerStatus: QuizAnswerStatus)
