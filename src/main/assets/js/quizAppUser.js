@@ -114,7 +114,7 @@ app.controller('Ctrl', ['$window', '$scope', 'createConnection', function ($wind
 	$scope.connection = {}
 	
 	function send(value){
-		parsedValue = angular.toJson(value)
+		var parsedValue = angular.toJson(value)
 		if ($scope.connection === "undefined"){
 			throw new {
 				"name": 'NotConnectedException', 

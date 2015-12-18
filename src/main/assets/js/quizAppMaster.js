@@ -302,7 +302,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	}
 	
 	function send(value){
-		parsedValue = angular.toJson(value)
+		var parsedValue = angular.toJson(value)
 		if ($scope.connection === "undefined"){
 			throw new {
 				"name": 'NotConnectedException', 

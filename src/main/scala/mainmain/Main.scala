@@ -194,6 +194,12 @@ trait Routes extends Directives with WSFlows with GenericServices{
   val assetsRoute = {
 	  pathPrefix("assets") {
 	    getFromResourceDirectory("public")
+	  } ~ 
+	  pathPrefix("javascripts") {
+	    getFromDirectory("target/web/resources-managed")
+	  } ~
+	  pathPrefix("jslibs") {
+		getFromDirectory("target/web/web-modules/main/webjars/lib")
 	  }
 	}
   
