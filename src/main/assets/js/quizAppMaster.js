@@ -1,7 +1,13 @@
+import angular from 'angular';
+import XLS from 'xlsx';
+require('rx');
+require('rx-angular');
+require('rx-dom');
+
 var app = angular.module("quizAppMaster", [
-	'ngWebSocket', 'rx'
+	'rx'
 ])
-.factory('createMasterConnection', ['$websocket', '$window', 'rx', function($websocket, $window, rx) {
+.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
 	function connect(quizId) {
 	

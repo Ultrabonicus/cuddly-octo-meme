@@ -1,7 +1,12 @@
+import angular from 'angular';
+require('rx');
+require('rx-angular');
+require('rx-dom')
+
 var app = angular.module("quizAppUser", [
-	'angular-websocket', 'rx'                                        
+	'rx'                                        
 ])
-.factory('createConnection', ['$websocket', '$window', 'rx', function($websocket, $window, rx) {
+.factory('createConnection', ['$window', 'rx', function($window, rx) {
 	
 	function connect(quizId, userId) {
 	
