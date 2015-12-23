@@ -3,8 +3,11 @@
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const path = require('path');
+const nodeModulesDir = path.join(__dirname, 'node_modules');
 
-module.exports = {
+
+var config = {
 	context: __dirname + '/src/main/assets',
     
 	entry: {
@@ -20,7 +23,8 @@ module.exports = {
 	},
 	
 	resolve: {
-		extensions: ['' ,'.js', '.less']
+		extensions: ['' ,'.js', '.less'],
+		alias: {}
 	},
 	
 	plugins: [
@@ -32,12 +36,15 @@ module.exports = {
 			name: "common",
 			chunks: ['master','user']
 		}),
-		new ExtractTextPlugin("style.css")
+		new ExtractTextPlugin("style.css"),
+		new webpack.optimize.UglifyJsPlugin()
 	],
 	
-//	devtool: 'inline-source-map',
+	devtool: NODE_ENV == 'development' ? 'eval' : null,
 	
 	module: {
+		
+		noParse: [],
 		
 		loaders: [{
 			test: /\.js$/,
@@ -66,3 +73,16 @@ module.exports = {
         }
     ]
 }
+
+if (NODE_ENV == 'production') {
+	config.plugins.push(
+		new webpack.optimize.UglifyJsPlugin({
+			compress: {
+				warnings:     false,
+				drop_console: true,
+				unsafe:       true
+			}
+		})
+	);
+}
+module.exports = config
