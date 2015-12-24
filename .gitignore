@@ -2,6 +2,9 @@
 *.class
 *.log
 
+# webpack specific
+/node_modules
+
 # sbt specific
 bin/*
 .cache

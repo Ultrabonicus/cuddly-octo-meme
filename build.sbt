@@ -24,4 +24,27 @@ libraryDependencies ++= Seq(
 	"org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
 	"junit" % "junit" % "4.8.1" % "test",
 	"com.typesafe.akka" %% "akka-http-testkit-experimental" % akkahttpVersion % "test"
+<<<<<<< HEAD
 )
+=======
+)
+
+/*
+	"org.webjars.bower" % "rxjs" % "4.0.6",
+	"org.webjars.bower" % "rx-dom" % "7.0.3",
+	"org.webjars.bower" % "angular-websocket" % "1.0.14",
+	"org.webjars.bower" % "angular-rx" % "1.0.4",
+	"org.webjars.bower" % "angularjs" % "1.4.8",
+	"org.webjars.bower" % "js-xlsx" % "0.8.0",
+*/
+
+//JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
+
+//lazy val root = (project in file(".")).enablePlugins(SbtWeb)
+
+//TraceurKeys.sourceFileNames in traceur in Assets := Seq("js/quizAppMaster.js", "js/quizAppUser.js")
+
+//TraceurKeys.outputFileName in traceur in Assets := "app.js"
+
+//pipelineStages := Seq(uglify)
+>>>>>>> dev

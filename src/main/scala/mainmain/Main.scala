@@ -173,9 +173,15 @@ trait BasicServices extends GenericServices {
   
   implicit val ec = mat.executionContext
 }
+<<<<<<< HEAD
 
 trait Routes extends Directives with WSFlows with GenericServices{
 
+=======
+
+trait Routes extends Directives with WSFlows with GenericServices{
+
+>>>>>>> dev
   import mainmain.Model._
   
   import SprayImplicits._
@@ -193,7 +199,11 @@ trait Routes extends Directives with WSFlows with GenericServices{
   
   val assetsRoute = {
 	  pathPrefix("assets") {
+<<<<<<< HEAD
 	    getFromResourceDirectory("public")
+=======
+	    getFromDirectory("target/web/public")
+>>>>>>> dev
 	  }
 	}
   
