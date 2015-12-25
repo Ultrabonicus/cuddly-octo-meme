@@ -24,9 +24,6 @@ libraryDependencies ++= Seq(
 	"org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
 	"junit" % "junit" % "4.8.1" % "test",
 	"com.typesafe.akka" %% "akka-http-testkit-experimental" % akkahttpVersion % "test"
-<<<<<<< HEAD
-)
-=======
 )
 
 /*
@@ -47,4 +44,3 @@ libraryDependencies ++= Seq(
 //TraceurKeys.outputFileName in traceur in Assets := "app.js"
 
 //pipelineStages := Seq(uglify)
->>>>>>> dev
