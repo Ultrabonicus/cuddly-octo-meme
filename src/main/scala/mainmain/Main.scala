@@ -230,10 +230,9 @@ trait Routes extends Directives with WSFlows with GenericServices{
 }
 
 object Model{
-  case class NewQuizId(quizId:Int)
-  case class NewQuiz(quizes:Seq[Quiz]) extends MasterMessage
-  case class User(name:String, secondName:String)
-  case class Tests(users: Seq[User],tests:Seq[NewQuiz])
+	case class NewQuizId(quizId:Int)
+	case class NewQuiz(quizes:Seq[Quiz]) extends MasterMessage
+	case class User(name:String, secondName:String)
 	case class Queston(id:Int,content: String)
 	case class Answer(id: Int, content:String)
 	case class Assigment(queston: Queston, answers:Seq[Answer], solution: Seq[Int]){

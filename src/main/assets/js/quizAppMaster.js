@@ -1,8 +1,17 @@
 import angular from 'angular';
 import XLS from 'xlsx';
+import Assigment from './classes/Assigment';
+import Answer from './classes/Answer';
+import Queston from './classes/Queston'; 
+import Quiz from './classes/Quiz'; 
+import AnswerStatusWithUserAnswer from './classes/AnswerStatusWithUserAnswer'; 
+import AnswerStatus from './classes/AnswerStatus'; 
+import FilledUserAnswer from './classes/FilledUserAnswer';
 require('rx');
 require('rx-angular');
 require('rx-dom');
+
+
 
 var app = angular.module("quizAppMaster", [
 	'rx'
