@@ -13,4 +13,12 @@ export default class Answer {
 		
 		this.content = content
 	}
+	
+	addChecked(){
+		this.isChecked = false
+	}
+	
+	isRight(solutionArray){
+		return solutionArray.some(x => x === this.id)
+	}
 }

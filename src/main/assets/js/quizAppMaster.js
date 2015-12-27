@@ -98,26 +98,20 @@ var app = angular.module("quizAppMaster", [
 		newObject.id = id
 		newObject.assigments = []
 		
-		for (var i = 0; i < sheet.length; i++){
-			var row = sheet[i]
-			var assigment = {}
-			assigment.queston = {}
-			assigment.queston.id = i
-			assigment.queston.content = row.que
-			var answer = row.answ.split(" ").map(function(x){return parseInt(x)})
-			assigment.solution = answer
+		for (let i = 0; i < sheet.length; i++){
+			let row = sheet[i]
+			let queston = new Queston(i,row.que)
+			let solution = row.answ.split(" ").map(function(x){return parseInt(x)})
 			function parseAnswers(obje) {
-				var answers = []
-				for(var i = 1 ; !(obje[i] === undefined); i++){
-					var answerObj = {}
-					answerObj.id = i
-					answerObj.content = obje[i]
-					answers[i-1] = answerObj
+				let answersArray = []
+				for(let i = 1 ; !(obje[i] === undefined); i++){
+					let answer = new Answer(i,obje[i])
+					answersArray[i-1] = answer
 				}
-				return answers
+				return answersArray
 			}
-			assigment.answers = parseAnswers(row)
-			newObject.assigments[i] = assigment
+			let answers = parseAnswers(row)
+			newObject.assigments[i] = new Assigment(queston, answers, solution)
 		}
 		
 		return newObject
@@ -198,7 +192,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				quizes.forEach(function(quiz){
 					quiz.assigments.forEach(function(assigment){
 						assigment.answers.forEach(function(answer){
-							answer.isChecked = false
+							answer.addChecked()
 							console.log("transforming")
 						})
 					})

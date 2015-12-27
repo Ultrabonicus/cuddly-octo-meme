@@ -37,12 +37,12 @@
 		</div>
 
 		
-		<div class="someclass" ng-Hide="connectionInfo.hide">
+		<div class="someclass" ng-Hide="connectionInfo.hide" ng-cloak>
 			<button ng-click="connectionInfo.connect()">Somebutton</button>
 				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
-		<div ng-hide = "sendNewQuiz.hide">
+		<div ng-hide = "sendNewQuiz.hide" ng-cloak>
 			<button ng-click="sendNewQuiz.sendNewQuizToServer()">send to server</button>
 		</div>
 		<div>
@@ -56,7 +56,7 @@
 			<tr ng-repeat="x in q.assigments">
 				<td> {{ x.queston.id }} </td>
 				<td> {{ x.queston.content }} </td>
-				<td ng-repeat="answer in x.answers" ng-class="{chosen: answer.isChecked}"> {{ answer.content }} </td>
+				<td ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
 				<td> {{ x.solution }} </td>
 			</tr>
 		</table>
