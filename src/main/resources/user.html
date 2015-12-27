@@ -29,9 +29,9 @@
 				userId: <input ng-model="connectionInfo.userId" type="number"/>
 		</div>
 		<br/>
+		<p ng-bind = "' assigment: ' + quiz.id"></p>
 		<table>
-			assigment {{ quiz.id }}
-			<tr ng-repeat="x in quiz.assigments">
+			<tr ng-repeat="x in quiz.assigments" ng-cloak>
 				<td> {{ x.queston.content }} </td>
 				<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> </td>
 				

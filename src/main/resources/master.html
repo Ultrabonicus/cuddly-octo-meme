@@ -37,16 +37,16 @@
 		</div>
 
 		
-		<div class="someclass" ng-Hide="connectionInfo.hide" ng-cloak>
+		<div class="someclass" ng-Hide="connectionInfo.hide">
 			<button ng-click="connectionInfo.connect()">Somebutton</button>
 				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
-		<div ng-hide = "sendNewQuiz.hide" ng-cloak>
-			<button ng-click="sendNewQuiz.sendNewQuizToServer()">send to server</button>
+		<div ng-hide = "sendNewQuiz.hide">
+			<button ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>send to server</button>
 		</div>
 		<div>
-		<table ng-repeat="q in newQuiz.quizes">
+		<table ng-repeat="q in newQuiz.quizes" ng-cloak>
 			<tr><th colspan = '100'>{{q.id}}</th></tr>
 			<tr>
 				<th> ид </th>
