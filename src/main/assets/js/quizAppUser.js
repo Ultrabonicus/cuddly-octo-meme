@@ -120,7 +120,7 @@ app.controller('Ctrl', ['$window', '$scope', 'createConnection', function ($wind
 	
 	function send(value){
 		var parsedValue = angular.toJson(value)
-		if ($scope.connection === "undefined"){
+		if ($scope.connection === undefined){
 			throw new {
 				"name": 'NotConnectedException', 
 				"message": "trying to send WS message while not connected"

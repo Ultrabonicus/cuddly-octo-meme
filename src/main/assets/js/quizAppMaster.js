@@ -186,7 +186,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	}
 	
 	$scope.toWorkingQuiz = function (){ 
-			if($scope.newQuiz.quizes !== "undefined"){
+			if($scope.newQuiz.quizes !== undefined){
 				console.log("quizes defined")
 				var quizes = $scope.newQuiz.quizes
 				quizes.forEach(function(quiz){
@@ -231,7 +231,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 					console.log("gzgzgzgzgzgzgzgzgzgz",x, assigment)
 					return x.id === assigment.queston.id
 				})
-				if((typeof status.filledUserAnswer) !== "undefined"){
+				if((typeof status.filledUserAnswer) !== undefined){
 				var answersArray = status.filledUserAnswer.answer
 					console.log("nrs",userStatus.userId,status.id,answersArray)
 					$scope.changeChecked(userStatus.userId,status.id,answersArray)
@@ -312,7 +312,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	
 	function send(value){
 		var parsedValue = angular.toJson(value)
-		if ($scope.connection === "undefined"){
+		if ($scope.connection === undefined){
 			throw new {
 				"name": 'NotConnectedException', 
 				"message": "trying to send WS message while not connected"
