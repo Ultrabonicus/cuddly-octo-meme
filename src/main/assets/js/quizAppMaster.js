@@ -201,8 +201,8 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	}
 	
 	$scope.sendNewQuiz = {
-			"hide": true,
-			"sendNewQuizToServer": function(){
+			hide: true,
+			sendNewQuizToServer: function(){
 				sendNewQuiz($scope.newQuiz).then( function(response){
 					console.log(response.data.quizId)
 					$scope.connectionInfo.quizId = response.data.quizId
@@ -220,19 +220,16 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		} else {
 		statusSeq.forEach(function(userStatus){
 			var quizz = $scope.newQuiz.quizes.find(function(quiz){
-				console.log("trtrtrtrtr",quiz, userStatus)
 				return quiz.id === userStatus.userId
 			})
 			console.log(quizz)
 			quizz.assigments.forEach(function(assigment){
 				var questi = assigment.queston
-				console.log("questi", questi)
 				var status = userStatus.status.find(function(x){
-					console.log("gzgzgzgzgzgzgzgzgzgz",x, assigment)
 					return x.id === assigment.queston.id
 				})
-				if((typeof status.filledUserAnswer) !== undefined){
-				var answersArray = status.filledUserAnswer.answer
+				if(status.filledUserAnswer !== undefined){
+					var answersArray = status.filledUserAnswer.answer
 					console.log("nrs",userStatus.userId,status.id,answersArray)
 					$scope.changeChecked(userStatus.userId,status.id,answersArray)
 					console.log("mutating")
@@ -267,17 +264,24 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		}
 	)
 	
-	function startWSconnection(rxSubject, isWithoutNewQuiz){
-		$scope.connection = rxSubject
-		if(isWithoutNewQuiz){
-			setTimeout(function(){
-				send({"code":3})
-				console.log("withoutNewQuiz")	
-			}, 1000)
-		}
-		var handle = setInterval(function () {
+	var autoupdate = {
+		
+		handle: null,
+		
+		start(){
+			this.handle = setInterval(function () {
 			send({"code":1})
-		}, 3000)
+			}, 3000)
+		},
+		
+		stop(){
+			clearInterval(this.handle)
+		}
+		
+	}
+	
+	function startWSconnection(rxSubject, isWithoutNewQuiz){
+		$scope.connection = rxSubject		
 		$scope.connection
 		.subscribe(
 				function (x) { 
@@ -304,10 +308,21 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				},
 				function () {
 					console.log('completed');
-					clearInterval(handle)
+					autoupdate.stop()
 					subj.onCompleted()
 				}
 		);
+		
+		new Promise(function (resolve,reject){
+				if(isWithoutNewQuiz){
+					send({"code":3})
+					console.log("withoutNewQuiz")
+				}
+				resolve("ok")
+			}
+		).then(function(x){
+			autoupdate.start()
+		})		
 	}
 	
 	function send(value){
