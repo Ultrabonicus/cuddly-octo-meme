@@ -123,6 +123,59 @@ var app = angular.module("quizAppMaster", [
 	return source
 	
 }])
+.factory('downloadResults', ['$window', function($window){
+	/*
+	 * 
+	 * example object
+	{
+		quizId: 1,
+		answers: [{
+			user: id,
+			totalAnswered: 15,
+			totalQuestons: 20,
+			overall: 60,
+			assigments: [
+				qId: 1
+				queston: "some queston", 
+				answers: [
+					{content: "some answer", id}
+				],
+				answered: [1,2]
+				rightAnswers: [1]
+			]
+		}]
+	}
+	*/
+	
+	function parseAllQuizes(newQuiz, isMinimal){
+		const parsedQuiz = newQuiz.quizes.map(x => parseSingleQuiz(x, isMinimal))
+		console.log("Parsed quiz: ", parsedQuiz)
+		return parsedQuiz
+		
+	}
+	
+	function parseSingleQuiz(quiz, isMinimal){
+		console.log('given quiz is: ', quiz)
+		const quizId = quiz.id
+		const assigments = quiz.assigments.map(function(x){
+			const answers = x.answers.map(function(z){ return {'content': z.content, 'id': z.id } })
+			const answered = x.answers.reduce((acc, z) => z.isChecked ? acc.concat(z.id) : acc , [])
+			const answer = {
+				qId: x.queston.id,
+				queston: x.queston.content,
+				rightAnswers: x.solution,
+				answers: answers,
+				answered: answered
+			}
+			return answer
+		})
+		return {
+			quizId: quizId,
+			assigments: assigments
+		}
+	}
+	return parseAllQuizes
+}])
 .factory('sendNewQuiz', ['$http', '$window', 'rx', function($http, $window, rx){
 	
 	function postNewQuiz(quiz){
@@ -140,7 +193,9 @@ var app = angular.module("quizAppMaster", [
 }])
 
 
-app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz) {
+app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults) {
+	
+	$scope.download = function() {console.log("dling"); downloadResults($scope.newQuiz, false)}
 	
 	$scope.connectionInfo = {
 			"hide": false,
