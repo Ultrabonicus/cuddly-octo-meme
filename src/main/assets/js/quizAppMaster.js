@@ -7,6 +7,7 @@ import Quiz from './classes/Quiz';
 import AnswerStatusWithUserAnswer from './classes/AnswerStatusWithUserAnswer'; 
 import AnswerStatus from './classes/AnswerStatus'; 
 import FilledUserAnswer from './classes/FilledUserAnswer';
+require('angular-file-saver');
 require('rx');
 require('rx-angular');
 require('rx-dom');
@@ -14,7 +15,7 @@ require('rx-dom');
 
 
 var app = angular.module("quizAppMaster", [
-	'rx'
+	'rx', 'ngFileSaver'
 ])
 .factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
@@ -123,7 +124,7 @@ var app = angular.module("quizAppMaster", [
 	return source
 	
 }])
-.factory('downloadResults', ['$window', function($window){
+.factory('downloadResults', ['$window', 'FileSaver', 'Blob', function($window, FileSaver, Blob){
 	/*
 	 * 
 	 * example object
@@ -147,18 +148,101 @@ var app = angular.module("quizAppMaster", [
 	}
 	*/
 	
+	function cellify(value) {
+/*
+	function datenum(v,date1904) {
+		if(date1904) v+=1462
+		var epoch = Date.parse(v)
+		return (epoch - newDate(Date.UTC(1899, 11, 300))) / (24 * 60 * 60 * 1000)
+	}
+*/
+	const cell = {v: value}
+	if(typeof cell.v === 'number') cell.t = 'n'
+	else if(typeof cell.v === 'boolean') cell.t = 'b'
+/*	else if(cell.v instanceof Date) {
+		cell.t = 'n'
+		cell.z = XLS.SSF._table[14]
+		cell.v = datenum(cell.v)
+	}
+*/	else cell.t = 's'
+	return cell
+	}
+
+	function nQuizToWorkbook(parsedNewQuiz, isMinimal){
+		const firstSheetName = "firstSheet"
+		const firstSheet = {};
+		firstSheet[XLS.utils.encode_cell({c:0,r:0})] = cellify(123)
+		firstSheet['!ref'] = XLS.utils.encode_range({s: {c:0, r:0}, e: {c: 0, r: 0}})
+		
+		const sheets = parsedNewQuiz.map(x => singleQuizToSheet(x, isMinimal))
+		
+		sheets
+		
+		const workbook = {}
+		
+		workbook.SheetNames = [firstSheetName].concat(sheets.map(x => x.sheetName.toString()))
+		
+		workbook.Sheets = {}
+		
+		sheets.forEach(x => workbook.Sheets[x.sheetName] = x.worksheet)
+		
+		workbook.Sheets[firstSheetName] = firstSheet
+		
+		console.log("SheetNames: ", workbook.SheetNames)
+		console.log("Sheets: ", workbook.Sheets)
+		
+		const wbook = XLS.write(workbook, {bookType: 'xlsx', bookSST: true, type: 'binary'})
+		
+		return wbook
+	}
+	
+	function singleQuizToSheet(parsedQuiz, isMinimal){
+		const worksheet = parsedQuiz.assigments.reduce(function(acc, x, index){
+			
+			acc[XLS.utils.encode_cell({c:0,r:index * 2 + 2})] = cellify(x.qId)
+			acc[XLS.utils.encode_cell({c:0,r:index * 2 + 3})] = cellify(x.queston)
+			x.answers.forEach(function(z, innerIndex){
+				acc[XLS.utils.encode_cell({c:innerIndex + 1,r:index * 2 + 2})] = cellify(z.id)
+				acc[XLS.utils.encode_cell({c:innerIndex + 1,r:index * 2 + 3})] = cellify(z.content)
+			})
+			acc[XLS.utils.encode_cell({c:1 + parsedQuiz.maxQuestonsLength, r:index * 2 + 2})] = cellify(x.rightAnswers.join(' '))
+			acc[XLS.utils.encode_cell({c:1 + parsedQuiz.maxQuestonsLength, r:index * 2 + 3})] = cellify(x.answered.join(' '))
+			
+			return acc
+		}, {})
+		
+		worksheet[XLS.utils.encode_cell({c:0,r:0})] = cellify("quiz id:")
+		worksheet[XLS.utils.encode_cell({c:1,r:0})] = cellify(parsedQuiz.quizId)
+		
+		worksheet['!ref'] = XLS.utils.encode_range({s: {c:0, r:0}, e: {c: 3 + parsedQuiz.maxQuestonsLength, r: parsedQuiz.assigments.length * 2 + 3}})
+			
+		const sheetName = parsedQuiz.quizId
+		
+		return {worksheet: worksheet, sheetName: sheetName}
+	}
+
 	function parseAllQuizes(newQuiz, isMinimal){
 		const parsedQuiz = newQuiz.quizes.map(x => parseSingleQuiz(x, isMinimal))
 		console.log("Parsed quiz: ", parsedQuiz)
-		return parsedQuiz
+		
+		const wbook = nQuizToWorkbook(parsedQuiz,isMinimal)
+		console.log("Workbook: ", wbook)
+		
+		FileSaver.saveAs(new Blob([s2ab(wbook)], {type:"application/octet-stream"}), newQuiz.quizId + ".xlsx")
 		
 	}
+	
+
 	
 	function parseSingleQuiz(quiz, isMinimal){
 		console.log('given quiz is: ', quiz)
 		const quizId = quiz.id
+		let maxQuestonsLength = 0
 		const assigments = quiz.assigments.map(function(x){
 			const answers = x.answers.map(function(z){ return {'content': z.content, 'id': z.id } })
+			if (answers.length > maxQuestonsLength) {
+				maxQuestonsLength = answers.length
+			}
 			const answered = x.answers.reduce((acc, z) => z.isChecked ? acc.concat(z.id) : acc , [])
 			const answer = {
 				qId: x.queston.id,
@@ -171,9 +255,18 @@ var app = angular.module("quizAppMaster", [
 		})
 		return {
 			quizId: quizId,
-			assigments: assigments
+			assigments: assigments,
+			maxQuestonsLength: maxQuestonsLength
 		}
 	}
+	
+	function s2ab(s) {
+		var buf = new ArrayBuffer(s.length)
+		var view = new Uint8Array(buf)
+		for(var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF
+		return buf
+	}
+	
 	return parseAllQuizes
 }])
 .factory('sendNewQuiz', ['$http', '$window', 'rx', function($http, $window, rx){
@@ -310,8 +403,8 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 			console.log(e)
 		},
 		function(){
-			console.log("complete", {"quizes": newQuizHelper})
-			$scope.newQuiz = {"quizes": newQuizHelper}
+			console.log("complete", {quizes: newQuizHelper})
+			$scope.newQuiz = {quizes: newQuizHelper, quizId: $scope.connectionInfo.quizId}
 			$scope.hideDrop = true
 			$scope.sendNewQuiz.hide = false
 			$scope.$apply()
