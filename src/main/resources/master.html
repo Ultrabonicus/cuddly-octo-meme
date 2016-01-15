@@ -29,41 +29,34 @@
 
 
 <body>
-
 	<div ng-controller="Ctrl">
-		<button ng-click = "download()"> download </button>
 		<div id="dragTarget" ng-hide="hideDrop">
 			<p>Drop here</p>
 		<hr/>
 		</div>
-
-		
 		<div class="someclass" ng-Hide="connectionInfo.hide">
 			<button ng-click="connectionInfo.connect()">Somebutton</button>
 				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
-		<div ng-hide = "sendNewQuiz.hide">
-			<button ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>send to server</button>
+		<div ng-show="newQuiz.quizes">
+			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>send to server</button>
+			<button ng-click = "download()"> download </button>
+			<table ng-repeat="q in newQuiz.quizes" ng-cloak>
+				<tr><th colspan = '100'>{{q.id}}</th></tr>
+				<tr>
+					<th> ид </th>
+					<th> Вопрос </th>
+					<th colspan = '100'> Ответы </th>
+				</tr>
+				<tr ng-repeat="x in q.assigments">
+					<td> {{ x.queston.id }} </td>
+					<td> {{ x.queston.content }} </td>
+					<td ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
+					<td> {{ x.solution }} </td>
+				</tr>
+			</table>
 		</div>
-		<div>
-		<table ng-repeat="q in newQuiz.quizes" ng-cloak>
-			<tr><th colspan = '100'>{{q.id}}</th></tr>
-			<tr>
-				<th> ид </th>
-				<th> Вопрос </th>
-				<th colspan = '100'> Ответы </th>
-			</tr>
-			<tr ng-repeat="x in q.assigments">
-				<td> {{ x.queston.id }} </td>
-				<td> {{ x.queston.content }} </td>
-				<td ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
-				<td> {{ x.solution }} </td>
-			</tr>
-		</table>
-		</div>
-		
 	</div>
-
 </body>
 </html>

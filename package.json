@@ -26,6 +26,6 @@
     "rx-dom": "^7.0.3",
     "style-loader": "^0.13.0",
     "webpack": "^1.12.9",
-    "xlsx": "^0.8.0"
+    "xlsx": "https://github.com/protobi/js-xlsx/tarball/master"
   }
 }
