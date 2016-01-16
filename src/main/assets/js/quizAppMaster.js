@@ -11,13 +11,15 @@ require('angular-file-saver');
 require('rx');
 require('rx-angular');
 require('rx-dom');
-
-
+require('angular-translate');
 
 var app = angular.module("quizAppMaster", [
-	'rx', 'ngFileSaver'
+	'rx', 'ngFileSaver', 'pascalprecht.translate'
 ])
-.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
+
+require('./quizAppMasterInt.js');
+
+app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
 	function connect(quizId) {
 	
@@ -304,7 +306,12 @@ var app = angular.module("quizAppMaster", [
 }])
 
 
-app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults) {
+app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate) {
+	
+	$scope.changeLanguage = function(langKey) {
+		console.log("changing language");
+		$translate.use(langKey);
+	}
 	
 	$scope.download = function() {console.log("dling"); downloadResults($scope.newQuiz, false)}
 	

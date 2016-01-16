@@ -30,24 +30,25 @@
 
 <body>
 	<div ng-controller="Ctrl">
+		<div class="translation"></div>
 		<div id="dragTarget" ng-hide="hideDrop">
-			<p>Drop here</p>
+			<p>{{ 'DROP_DROP_HERE' | translate }}</p>
 		<hr/>
 		</div>
 		<div class="someclass" ng-Hide="connectionInfo.hide">
-			<button ng-click="connectionInfo.connect()">Somebutton</button>
-				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
+			<button ng-click="connectionInfo.connect()">{{ 'CONNECT_BTN_NAME' | translate }}</button>
+				{{ 'CONNECT_QUIZ_ID' | translate }}: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
 		<div ng-show="newQuiz.quizes">
-			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>send to server</button>
-			<button ng-click = "download()"> download </button>
+			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>{{ 'SEND_NEW_QUIZ' | translate }}</button>
+			<button ng-click = "download()"> {{ 'DOWNLOAD_RESULT' | translate }} </button>
 			<table ng-repeat="q in newQuiz.quizes" ng-cloak>
 				<tr><th colspan = '100'>{{q.id}}</th></tr>
 				<tr>
-					<th> ид </th>
-					<th> Вопрос </th>
-					<th colspan = '100'> Ответы </th>
+					<th> {{ 'COLUMN_ID' | translate }} </th>
+					<th> {{ 'COLUMN_QUESTON' | translate }} </th>
+					<th colspan = '100'> {{ 'COLUMN_ANSWERS' | translate }} </th>
 				</tr>
 				<tr ng-repeat="x in q.assigments">
 					<td> {{ x.queston.id }} </td>

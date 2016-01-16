@@ -1,12 +1,18 @@
 import angular from 'angular';
 require('rx');
 require('rx-angular');
-require('rx-dom')
+require('rx-dom');
+require('angular-translate');
+
+
 
 var app = angular.module("quizAppUser", [
-	'rx'                                        
+	'rx', 'pascalprecht.translate'
 ])
-.factory('createConnection', ['$window', 'rx', function($window, rx) {
+
+require('./quizAppUserInt.js');
+
+app.factory('createConnection', ['$window', 'rx', function($window, rx) {
 	
 	function connect(quizId, userId) {
 	
@@ -36,7 +42,12 @@ var app = angular.module("quizAppUser", [
 	return connect
 }]);
 
-app.controller('Ctrl', ['$window', '$scope', 'createConnection', function ($window, $scope, createConnection) {
+app.controller('Ctrl', ['$window', '$scope', 'createConnection', '$translate', function ($window, $scope, createConnection, $translate) {
+	
+	$scope.changeLanguage = function(langKey) {
+		console.log("changing language");
+		$translate.use(langKey);
+	}	
 	
 	$scope.connectionInfo = {
 			"hide": false,

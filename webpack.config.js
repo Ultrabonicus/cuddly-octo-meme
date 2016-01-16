@@ -23,7 +23,7 @@ var config = {
 	},
 	
 	resolve: {
-		extensions: ['' ,'.js', '.less'],
+		extensions: ['' ,'.js', '.less', '.html'],
 		alias: {}
 	},
 	
@@ -60,6 +60,9 @@ var config = {
 				"style-loader", 
 				"css-loader!less-loader"
 			)
+		},{
+			test: /\.html$/,
+			loader: 'ngtemplate?relativeTo=' + (path.resolve(__dirname, './src/main/assets/js/angular_templates')) + '/!html',
 		}]
 	},
 

@@ -23,17 +23,19 @@
 
 <body>
 	<div class="someclass2" ng-controller="Ctrl">
+		<div class="translation"></div>
 		<div class="someclass" ng-Hide="connectionInfo.hide">
-			<button ng-click="connectionInfo.connect()">Somebutton</button>
-				quizId: <input ng-model="connectionInfo.quizId" type="number"/>
-				userId: <input ng-model="connectionInfo.userId" type="number"/>
+			<button ng-click="connectionInfo.connect()">{{'CONNECT_BUTTON' | translate}}</button>
+				{{'CONNECT_QUIZ_ID' | translate}}: <input ng-model="connectionInfo.quizId" type="number"/>
+				{{'CONNECT_USER_ID' | translate}}: <input ng-model="connectionInfo.userId" type="number"/>
 		</div>
 		<br/>
-		<p ng-bind = "' assigment: ' + quiz.id"></p>
+		<p> {{('ASSIGMENT_NAME' | translate) + ': ' + quiz.id}} </p>
 		<table>
 			<tr ng-repeat="x in quiz.assigments" ng-cloak>
 				<td> {{ x.queston.content }} </td>
-				<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> </td>
+				<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> 
+				</td>
 				
 			</tr>
 		
