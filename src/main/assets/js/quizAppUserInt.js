@@ -20,7 +20,11 @@ const ruLang = {
 	CONNECT_QUIZ_ID: "ИД задания",
 	CONNECT_USER_ID: "ИД пользователя",
 	
-	ASSIGMENT_NAME: "Задание"
+	ASSIGMENT_NAME: "Задание",
+	
+	COLUMN_ID: "Номер вопроса",
+	COLUMN_QUESTON: "Вопрос",
+	COLUMN_ANSWERS: "Варианты ответов"
 }
 
 const enLang = {
@@ -28,5 +32,9 @@ const enLang = {
 	CONNECT_QUIZ_ID: "Quiz ID",
 	CONNECT_USER_ID: "User ID",
 	
-	ASSIGMENT_NAME: "Assigment"
+	ASSIGMENT_NAME: "Assigment",
+	
+	COLUMN_ID: "id",
+	COLUMN_QUESTON: "Queston",
+	COLUMN_ANSWERS: "Answers"
 }

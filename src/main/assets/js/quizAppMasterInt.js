@@ -22,16 +22,17 @@ console.log('template: ', i18nTemplate);
 const ruLang = {
 	DROP_DROP_HERE: "Перетащить вопросы сюда",
 	
-	CONNECT_BTN_NAME: "Подключение",
+	CONNECT_BTN_NAME: "Соединение",
 	CONNECT_QUIZ_ID: "ИД опроса",
 	
 	SEND_NEW_QUIZ: "Начать",
 	
 	DOWNLOAD_RESULT: "Скачать результат",
 	
-	COLUMN_ID: "ИД",
+	COLUMN_ID: "Номер вопроса",
 	COLUMN_QUESTON: "Вопрос",
-	COLUMN_ANSWERS: "Правильные ответы"
+	COLUMN_ANSWERS: "Ответы",
+	COLUMN_CORRECT_ANSWERS: "Правильные ответы"
 }
 
 const enLang = {
@@ -44,7 +45,8 @@ const enLang = {
 	
 	DOWNLOAD_RESULT: "Download result",
 	
-	COLUMN_ID: "ID",
+	COLUMN_ID: "id",
 	COLUMN_QUESTON: "Queston",
-	COLUMN_ANSWERS: "Right answers"
+	COLUMN_ANSWERS: "Answers",
+	COLUMN_CORRECT_ANSWERS: "Correct answers"
 }

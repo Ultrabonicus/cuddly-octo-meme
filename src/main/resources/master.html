@@ -40,23 +40,26 @@
 				{{ 'CONNECT_QUIZ_ID' | translate }}: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
-		<div ng-show="newQuiz.quizes">
+		<div class="main-table" ng-show="newQuiz.quizes">
 			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>{{ 'SEND_NEW_QUIZ' | translate }}</button>
 			<button ng-click = "download()"> {{ 'DOWNLOAD_RESULT' | translate }} </button>
-			<table ng-repeat="q in newQuiz.quizes" ng-cloak>
+			<div ng-cloak>
+			<table ng-repeat="q in newQuiz.quizes">
 				<tr><th colspan = '100'>{{q.id}}</th></tr>
 				<tr>
 					<th> {{ 'COLUMN_ID' | translate }} </th>
 					<th> {{ 'COLUMN_QUESTON' | translate }} </th>
-					<th colspan = '100'> {{ 'COLUMN_ANSWERS' | translate }} </th>
+					<th ng-attr-colspan = "{{ q.maxAnswersLength }}"> {{ 'COLUMN_ANSWERS' | translate }} </th>
+					<th>{{ 'COLUMN_CORRECT_ANSWERS' | translate}}<th>
 				</tr>
 				<tr ng-repeat="x in q.assigments">
 					<td> {{ x.queston.id }} </td>
 					<td> {{ x.queston.content }} </td>
-					<td ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
+					<td ng-attr-colspan = "{{ $last ? q.maxAnswersLength - x.answers.length + 1 : 1 }}" ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
 					<td> {{ x.solution }} </td>
 				</tr>
 			</table>
+			</div>
 		</div>
 	</div>
 </body>

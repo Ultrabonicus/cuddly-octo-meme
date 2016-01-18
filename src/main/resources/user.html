@@ -30,16 +30,21 @@
 				{{'CONNECT_USER_ID' | translate}}: <input ng-model="connectionInfo.userId" type="number"/>
 		</div>
 		<br/>
-		<p> {{('ASSIGMENT_NAME' | translate) + ': ' + quiz.id}} </p>
-		<table>
-			<tr ng-repeat="x in quiz.assigments" ng-cloak>
-				<td> {{ x.queston.content }} </td>
-				<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> 
-				</td>
-				
-			</tr>
-		
-		</table>
+		<div>
+			<p> {{('ASSIGMENT_NAME' | translate) + ': ' + quiz.id}} </p>
+			<table ng-show="quiz.assigments" ng-cloak>
+				<tr>
+<!--					<th> {{ 'COLUMN_ID' | translate }} </th> -->
+					<th> {{ 'COLUMN_QUESTON' | translate }} </th>
+					<th colspan = '100'> {{ 'COLUMN_ANSWERS' | translate }} </th>
+				</tr>
+				<tr ng-repeat="x in quiz.assigments">
+					<td> {{ x.queston.content }} </td>
+					<td ng-repeat="answer in x.answers"> {{ answer.content }} <input type="checkbox" ng-model="answer.isChecked" ng-change="sendSingleAnswer(x.queston.id,answer.id)"> 
+					</td>
+				</tr>
+			</table>
+		</div>
 	</div>
 
 </body>

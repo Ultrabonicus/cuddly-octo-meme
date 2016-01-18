@@ -14,15 +14,17 @@ require('./quizAppUserInt.js');
 
 app.factory('createConnection', ['$window', 'rx', function($window, rx) {
 	
-	function connect(quizId, userId) {
+	function connect(quizId, userId, onOpen, onClose) {
 	
 	var openObserver = rx.Observer.create(function(e) {
-		console.info('socket open')
+		console.info('socket open');
+		onOpen ? onOpen() : angular.noop
 		
 	});
 	
 	var closingObserver = rx.Observer.create(function(e) {
 		console.log('socket is about to close');
+		onClose ? onClose() : angular.noop
 	});
 	
 	var host = $window.location.host
@@ -58,7 +60,7 @@ app.controller('Ctrl', ['$window', '$scope', 'createConnection', '$translate', f
 				if($scope.connectionInfo.quizId === 0 || $scope.connectionInfo.userId === 0) {
 					alert("Wrong Id/s")
 				} else {
-					startWSconnection(createConnection($scope.connectionInfo.quizId,$scope.connectionInfo.userId))
+					startWSconnection($scope.connectionInfo.quizId,$scope.connectionInfo.userId)
 					this.hide = true
 				}
 			}
@@ -141,7 +143,8 @@ app.controller('Ctrl', ['$window', '$scope', 'createConnection', '$translate', f
 		}
 	}
 	
-	function startWSconnection(rxSubject){
+	function startWSconnection(qId, uId){
+	const rxSubject = createConnection(qId, uId)
 	$scope.connection = rxSubject
 	$scope.connection
 	.subscribe(

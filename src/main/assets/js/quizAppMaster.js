@@ -21,15 +21,17 @@ require('./quizAppMasterInt.js');
 
 app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
-	function connect(quizId) {
+	
+	function connect(quizId, onOpen, onClose) {
 	
 	var openObserver = rx.Observer.create(function(e) {
 		console.info('socket open')
-		
+		onOpen()
 	});
 	
 	var closingObserver = rx.Observer.create(function(e) {
 		console.log('socket is about to close');
+		onClose()
 	});
 	
 	var host = $window.location.host
@@ -40,6 +42,8 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 			openObserver,
 			closingObserver
 	)
+	
+	console.log("WS connected")
 	
 	return socket
 	}
@@ -324,7 +328,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				if(this.quizId === 0) {
 					alert("Wrong Id")
 				} else {
-					startWSconnection(createMasterConnection(this.quizId), !isNewQuizPresent)
+					startWSconnection(this.quizId, !isNewQuizPresent)
 					this.hide = true
 					this.isConnected = true
 					$scope.hideDrop = true
@@ -358,18 +362,51 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		})
 	}
 	
-	$scope.toWorkingQuiz = function (){ 
+	function parseNewQuizFromJson(json){
+		
+		const parsed = Array.prototype.map.call(json.quizes, function(quiz){
+			
+			const assigments = Array.prototype.map.call(quiz.assigments, function(assigment){
+				
+				const queston = new Queston(assigment.queston.id, assigment.queston.content)
+				
+				const answers = Array.prototype.map.call(assigment.answers, function(answer) {
+					return new Answer(answer.id, answer.content)
+				})
+				
+				const solution = assigment.solution
+				
+				return new Assigment(queston, answers, solution)
+			})
+			
+			return new Quiz(quiz.id, assigments)
+		})
+		
+		console.log("Parsed newQuiz from json: ", parsed)
+		
+		return parsed
+	}
+	
+	$scope.toWorkingQuiz = function (){
 			if($scope.newQuiz.quizes !== undefined){
-				console.log("quizes defined")
+				console.log("quizes defined, newQuiz object: ", $scope.newQuiz)
 				var quizes = $scope.newQuiz.quizes
 				quizes.forEach(function(quiz){
+					let maxAnswersLength = 0
 					quiz.assigments.forEach(function(assigment){
+						if(assigment.answers.length > maxAnswersLength){
+							maxAnswersLength = assigment.answers.length
+						}
 						assigment.answers.forEach(function(answer){
 							answer.addChecked()
 							console.log("transforming")
 						})
 					})
+					quiz.maxAnswersLength = maxAnswersLength
+					console.log("answers length: ", maxAnswersLength)
 				})
+			} else {
+				console.warn("quizes is undefined! newQuiz object: ", $scope.newQuiz)
 			}
 	}
 	
@@ -437,7 +474,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		}
 	)
 	
-	var autoupdate = {
+	const autoupdate = {
 		
 		handle: null,
 		
@@ -453,8 +490,15 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		
 	}
 	
-	function startWSconnection(rxSubject, isWithoutNewQuiz){
-		$scope.connection = rxSubject		
+	function startWSconnection(id, isWithoutNewQuiz){
+/*
+		if(isWithoutNewQuiz){
+			createMasterConnection(id, )
+			console.log("withoutNewQuiz")
+		} else 
+*/		
+		const rxSubject = createMasterConnection(id, isWithoutNewQuiz ? () => {send({"code":3}); autoupdate.start()} : () => autoupdate.start(), () => autoupdate.stop())
+		$scope.connection = rxSubject
 		$scope.connection
 		.subscribe(
 				function (x) { 
@@ -466,8 +510,9 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 						break;
 					case 1102:
 						console.log("recived 1102", json.load);
-						$scope.newQuiz = json.load
+						$scope.newQuiz = { quizes: parseNewQuizFromJson(json.load), quizId: $scope.connectionInfo.quizId }
 						$scope.toWorkingQuiz()
+						$scope.$apply()
 						break;
 					case 1103:
 						console.log("recived 1103", json.load);
@@ -478,14 +523,14 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				},
 				function (e) {
 					console.log('onerror ', e);
+					autoupdate.stop()
 				},
 				function () {
 					console.log('completed');
 					autoupdate.stop()
-					subj.onCompleted()
 				}
 		);
-		
+		/*
 		new Promise(function (resolve,reject){
 				if(isWithoutNewQuiz){
 					send({"code":3})
@@ -494,8 +539,9 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				resolve("ok")
 			}
 		).then(function(x){
-			autoupdate.start()
-		})		
+			
+		})
+		*/
 	}
 	
 	function send(value){
@@ -506,6 +552,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				"message": "trying to send WS message while not connected"
 			}
 		} else {
+			console.log("sending to server code: ", parsedValue)
 			$scope.connection.onNext(parsedValue)
 		}
 	}
