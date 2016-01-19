@@ -362,6 +362,20 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		})
 	}
 	
+	function addQuestonLengthField(quizes){
+		
+		const updatedQuizes = quizes.map(function(quiz){
+			const maxAnswersLength = quiz.assigments.reduce(function(biggest, assigment){
+				return biggest < assigment.answers.length ? assigment.answers.length : biggest
+			},0)
+			console.log('maxQuestonsLength: ', maxAnswersLength)
+			quiz.maxAnswersLength = maxAnswersLength
+			return quiz
+		})
+		
+		return updatedQuizes
+	}
+	
 	function parseNewQuizFromJson(json){
 		
 		const parsed = Array.prototype.map.call(json.quizes, function(quiz){
@@ -392,18 +406,12 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				console.log("quizes defined, newQuiz object: ", $scope.newQuiz)
 				var quizes = $scope.newQuiz.quizes
 				quizes.forEach(function(quiz){
-					let maxAnswersLength = 0
 					quiz.assigments.forEach(function(assigment){
-						if(assigment.answers.length > maxAnswersLength){
-							maxAnswersLength = assigment.answers.length
-						}
 						assigment.answers.forEach(function(answer){
 							answer.addChecked()
 							console.log("transforming")
 						})
 					})
-					quiz.maxAnswersLength = maxAnswersLength
-					console.log("answers length: ", maxAnswersLength)
 				})
 			} else {
 				console.warn("quizes is undefined! newQuiz object: ", $scope.newQuiz)
@@ -452,7 +460,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	
 	$scope.newQuiz = {}
 	
-	var newQuizHelper = []
+	let newQuizHelper = []
 	
 	$scope.hideDrop = false
 	
@@ -466,7 +474,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		},
 		function(){
 			console.log("complete", {quizes: newQuizHelper})
-			$scope.newQuiz = {quizes: newQuizHelper, quizId: $scope.connectionInfo.quizId}
+			$scope.newQuiz = {quizes: addQuestonLengthField(newQuizHelper), quizId: $scope.connectionInfo.quizId}
 			$scope.hideDrop = true
 			$scope.sendNewQuiz.hide = false
 			$scope.$apply()
@@ -491,12 +499,6 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	}
 	
 	function startWSconnection(id, isWithoutNewQuiz){
-/*
-		if(isWithoutNewQuiz){
-			createMasterConnection(id, )
-			console.log("withoutNewQuiz")
-		} else 
-*/		
 		const rxSubject = createMasterConnection(id, isWithoutNewQuiz ? () => {send({"code":3}); autoupdate.start()} : () => autoupdate.start(), () => autoupdate.stop())
 		$scope.connection = rxSubject
 		$scope.connection
@@ -510,7 +512,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 						break;
 					case 1102:
 						console.log("recived 1102", json.load);
-						$scope.newQuiz = { quizes: parseNewQuizFromJson(json.load), quizId: $scope.connectionInfo.quizId }
+						$scope.newQuiz = { quizes: addQuestonLengthField(parseNewQuizFromJson(json.load)), quizId: $scope.connectionInfo.quizId }
 						$scope.toWorkingQuiz()
 						$scope.$apply()
 						break;
@@ -530,18 +532,6 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 					autoupdate.stop()
 				}
 		);
-		/*
-		new Promise(function (resolve,reject){
-				if(isWithoutNewQuiz){
-					send({"code":3})
-					console.log("withoutNewQuiz")
-				}
-				resolve("ok")
-			}
-		).then(function(x){
-			
-		})
-		*/
 	}
 	
 	function send(value){
