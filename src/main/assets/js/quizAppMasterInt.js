@@ -32,7 +32,12 @@ const ruLang = {
 	COLUMN_ID: "Номер вопроса",
 	COLUMN_QUESTON: "Вопрос",
 	COLUMN_ANSWERS: "Ответы",
-	COLUMN_CORRECT_ANSWERS: "Правильные ответы"
+	COLUMN_CORRECT_ANSWERS: "Правильные ответы",
+	
+	SPREADSHEET_QUIZ_ID: "ИД опроса",
+	SPREADSHEET_QUESTON_ID: "ИД вопроса/вопрос",
+	SPREADSHEET_ANSWERS: "Правильные ответы/Пользовательские ответы"
+	
 }
 
 const enLang = {
@@ -48,5 +53,9 @@ const enLang = {
 	COLUMN_ID: "id",
 	COLUMN_QUESTON: "Queston",
 	COLUMN_ANSWERS: "Answers",
-	COLUMN_CORRECT_ANSWERS: "Correct answers"
+	COLUMN_CORRECT_ANSWERS: "Correct answers",
+	
+	SPREADSHEET_QUIZ_ID: "Quiz ID",
+	SPREADSHEET_QUESTON_ID: "Queston ID/Queston",
+	SPREADSHEET_ANSWERS: "Correct answers/User answers"
 }

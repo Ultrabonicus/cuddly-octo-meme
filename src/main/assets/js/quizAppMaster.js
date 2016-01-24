@@ -130,7 +130,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	return source
 	
 }])
-.factory('downloadResults', ['$window', 'FileSaver', 'Blob', function($window, FileSaver, Blob){
+.factory('downloadResults', ['$window', 'FileSaver', 'Blob', '$translate', function($window, FileSaver, Blob, $translate){
 	/*
 	 * 
 	 * example object
@@ -212,6 +212,13 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	}
 	
 	function singleQuizToSheet(parsedQuiz, isMinimal){
+		
+		const translate = $translate.instant([
+			'SPREADSHEET_QUIZ_ID',
+			'SPREADSHEET_QUESTON_ID',
+			'SPREADSHEET_ANSWERS'
+		])
+		
 		const worksheet = parsedQuiz.assigments.reduce(function(acc, x, index){
 			
 			let idCell = cellify(x.qId)
@@ -233,10 +240,12 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 			return acc
 		}, {})
 		
-		worksheet[XLS.utils.encode_cell({c:0,r:0})] = cellify("quiz id:")
+		
+		
+		worksheet[XLS.utils.encode_cell({c:0,r:0})] = cellify(translate.SPREADSHEET_QUIZ_ID + ":")
 		worksheet[XLS.utils.encode_cell({c:0,r:1})] = cellify(parsedQuiz.quizId)
-		worksheet[XLS.utils.encode_cell({c:2,r:0})] = cellify("queston ID/queston")
-		worksheet[XLS.utils.encode_cell({c:1 + parsedQuiz.maxQuestonsLength,r:0})] = cellify("right answers/user answers")
+		worksheet[XLS.utils.encode_cell({c:2,r:0})] = cellify(translate.SPREADSHEET_QUESTON_ID)
+		worksheet[XLS.utils.encode_cell({c:1 + parsedQuiz.maxQuestonsLength,r:0})] = cellify(translate.SPREADSHEET_ANSWERS)
 		
 		worksheet['!ref'] = XLS.utils.encode_range({s: {c:0, r:0}, e: {c:1 + parsedQuiz.maxQuestonsLength, r: parsedQuiz.assigments.length * 2 + 3}})
 			
