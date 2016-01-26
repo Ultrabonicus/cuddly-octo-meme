@@ -2,6 +2,9 @@
 *.class
 *.log
 
+# karma specific
+/coverage
+
 # webpack specific
 /node_modules
 

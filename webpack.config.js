@@ -7,20 +7,41 @@ const path = require('path');
 const nodeModulesDir = path.join(__dirname, 'node_modules');
 
 
-var config = {
-	context: __dirname + '/src/main/assets',
-    
-	entry: {
+function nodeenv(development, production, test){
+	if(NODE_ENV == 'development'){
+		return development()
+	} else if(NODE_ENV == 'production'){
+		return production()
+	} else if(NODE_ENV == 'test'){
+		return test()
+	} else {
+		return null
+	}
+}
+function returnNull(){
+	return null
+}
+
+
+const entry = {
 		master : "./js/quizAppMaster.js",
 		user: "./js/quizAppUser.js",
 		style: "./css/style.less"
-	},
+	}
 	
-    output: {
+const output = {
 		path: __dirname + '/target/web/public',
         filename: "[name].js",
 		library: "[name]"
-	},
+	}
+
+const contextDir = __dirname + '/src/main/assets'
+	
+var config = {
+    
+	entry: nodeenv(() => entry, () => entry, () => {}),
+	
+    output: nodeenv(() => output, () => output, () => {}),
 	
 	resolve: {
 		extensions: ['' ,'.js', '.less', '.html'],
@@ -31,20 +52,14 @@ var config = {
 		new webpack.NoErrorsPlugin(),
 		new webpack.DefinePlugin({
 			NODE_ENV: JSON.stringify(NODE_ENV)
-		}),
-		new webpack.optimize.CommonsChunkPlugin({
-			name: "common",
-			chunks: ['master','user']
-		}),
-		new ExtractTextPlugin("style.css"),
-		new webpack.optimize.UglifyJsPlugin()
+		})
 	],
 	
-	devtool: NODE_ENV == 'development' ? 'eval' : null,
+	devtool: nodeenv(() => 'eval', returnNull, () => 'eval'),
 	
 	module: {
 		
-		noParse: [],
+		noParse: [/^jquery(\-.*)?$/],
 		
 		loaders: [{
 			test: /\.js$/,
@@ -64,7 +79,10 @@ var config = {
 			test: /\.html$/,
 			loader: 'ngtemplate?relativeTo=' + (path.resolve(__dirname, './src/main/assets/js/angular_templates')) + '/!html',
 		}]
-	},
+	}
+	
+	
+	,
 
     node: {
             fs: 'empty'
@@ -77,6 +95,22 @@ var config = {
     ]
 }
 
+nodeenv(() => config.context = contextDir, () => config.context = contextDir, returnNull)
+
+
+
+if (NODE_ENV != 'test') {
+	config.plugins.push(
+		new webpack.optimize.CommonsChunkPlugin({
+			name: "common",
+			chunks: ['master','user']
+		})
+	);
+	config.plugins.push(
+		new ExtractTextPlugin("style.css")
+	);
+}
+		
 if (NODE_ENV == 'production') {
 	config.plugins.push(
 		new webpack.optimize.UglifyJsPlugin({
