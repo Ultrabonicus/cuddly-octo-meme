@@ -55,7 +55,7 @@ var config = {
 		})
 	],
 	
-	devtool: nodeenv(() => 'eval', returnNull, () => 'eval'),
+	devtool: nodeenv(() => 'eval', returnNull, () => 'inline-source-map'),
 	
 	module: {
 		
@@ -97,8 +97,15 @@ var config = {
 
 nodeenv(() => config.context = contextDir, () => config.context = contextDir, returnNull)
 
-
-
+/*
+if (NODE_ENV == 'test') {
+	config.module.preLoaders = [{
+		test: /\.js$/,
+		include: path.resolve(__dirname, './src/test/assets/js'),
+		loader: 'babel-istanbul'
+	}];
+}
+*/
 if (NODE_ENV != 'test') {
 	config.plugins.push(
 		new webpack.optimize.CommonsChunkPlugin({

@@ -130,77 +130,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	return source
 	
 }])
-.factory('downloadResults', ['$window', 'FileSaver', 'Blob', '$translate', function($window, FileSaver, Blob, $translate){
-	/*
-	 * 
-	 * example object
-	{
-		quizId: 1,
-		answers: [{
-			user: id,
-			totalAnswered: 15,
-			totalQuestons: 20,
-			overall: 60,
-			assigments: [
-				qId: 1
-				queston: "some queston", 
-				answers: [
-					{content: "some answer", id}
-				],
-				answered: [1,2]
-				rightAnswers: [1]
-			]
-		}]
-	}
-	*/
-	
-	function cellify(value) {
-/*
-	function datenum(v,date1904) {
-		if(date1904) v+=1462
-		var epoch = Date.parse(v)
-		return (epoch - newDate(Date.UTC(1899, 11, 300))) / (24 * 60 * 60 * 1000)
-	}
-*/
-	const cell = {v: value}
-	if(typeof cell.v === 'number') cell.t = 'n'
-	else if(typeof cell.v === 'boolean') cell.t = 'b'
-/*	else if(cell.v instanceof Date) {
-		cell.t = 'n'
-		cell.z = XLS.SSF._table[14]
-		cell.v = datenum(cell.v)
-	}
-*/	else cell.t = 's'
-	return cell
-	}
-
-	function nQuizToWorkbook(parsedNewQuiz, isMinimal){
-		const firstSheetName = "firstSheet"
-		const firstSheet = {};
-		firstSheet[XLS.utils.encode_cell({c:0,r:0})] = cellify(123)
-		firstSheet['!ref'] = XLS.utils.encode_range({s: {c:0, r:0}, e: {c: 0, r: 0}})
-		
-		const sheets = parsedNewQuiz.map(x => singleQuizToSheet(x, isMinimal))
-		
-		sheets
-		
-		const workbook = {}
-		
-		workbook.SheetNames = [firstSheetName].concat(sheets.map(x => x.sheetName.toString()))
-		
-		workbook.Sheets = {}
-		
-		sheets.forEach(x => workbook.Sheets[x.sheetName] = x.worksheet)
-		
-		workbook.Sheets[firstSheetName] = firstSheet
-		
-		console.log("SheetNames: ", workbook.SheetNames)
-		console.log("Sheets: ", workbook.Sheets)
-		
-		const wbook = XLS.write(workbook, {bookType: 'xlsx', bookSST: true, type: 'binary'})
-		
-		return wbook
-	}
+.service('downloadResultsUtils', ['$translate', function($translate){
 	
 	function percentToRGB(red, green, blue){
 		function percentToHex(percent){
@@ -211,7 +141,34 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		return str
 	}
 	
+	function cellify(value) {
+/*
+	function datenum(v,date1904) {
+		if(date1904) v+=1462
+		var epoch = Date.parse(v)
+		return (epoch - newDate(Date.UTC(1899, 11, 300))) / (24 * 60 * 60 * 1000)
+	}
+*/
+		const cell = {v: value}
+		
+		if(typeof cell.v === 'number') cell.t = 'n'
+		
+		else if(typeof cell.v === 'boolean') cell.t = 'b'
+	/*	else if(cell.v instanceof Date) {
+			cell.t = 'n'
+			cell.z = XLS.SSF._table[14]
+			cell.v = datenum(cell.v)
+	}
+
+	*/	else cell.t = 's'
+	
+	return cell
+	
+	}
+	
 	function singleQuizToSheet(parsedQuiz, isMinimal){
+		
+		console.log('parsedQuiz: ', parsedQuiz)
 		
 		const translate = $translate.instant([
 			'SPREADSHEET_QUIZ_ID',
@@ -251,21 +208,10 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 			
 		const sheetName = parsedQuiz.quizId
 		
+		console.log("worksheet: ", worksheet)
+		
 		return {worksheet: worksheet, sheetName: sheetName}
 	}
-
-	function parseAllQuizes(newQuiz, isMinimal){
-		const parsedQuiz = newQuiz.quizes.map(x => parseSingleQuiz(x, isMinimal))
-		console.log("Parsed quiz: ", parsedQuiz)
-		
-		const wbook = nQuizToWorkbook(parsedQuiz,isMinimal)
-		console.log("Workbook: ", wbook)
-		
-		FileSaver.saveAs(new Blob([s2ab(wbook)], {type:"application/octet-stream"}), newQuiz.quizId + ".xlsx")
-		
-	}
-	
-
 	
 	function parseSingleQuiz(quiz, isMinimal){
 		console.log('given quiz is: ', quiz)
@@ -298,7 +244,83 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		var view = new Uint8Array(buf)
 		for(var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF
 		return buf
+	}	
+	
+	function nQuizToWorkbook(parsedNewQuiz, isMinimal){
+		const firstSheetName = "firstSheet"
+		const firstSheet = {};
+		firstSheet[XLS.utils.encode_cell({c:0,r:0})] = cellify(123)
+		firstSheet['!ref'] = XLS.utils.encode_range({s: {c:0, r:0}, e: {c: 0, r: 0}})
+		
+		const sheets = parsedNewQuiz.map(x => singleQuizToSheet(x, isMinimal))
+		
+		const workbook = {}
+		
+		workbook.SheetNames = [firstSheetName].concat(sheets.map(x => x.sheetName.toString()))
+		
+		workbook.Sheets = {}
+		
+		sheets.forEach(x => workbook.Sheets[x.sheetName] = x.worksheet)
+		
+		workbook.Sheets[firstSheetName] = firstSheet
+		
+		console.log("SheetNames: ", workbook.SheetNames)
+		console.log("Sheets: ", workbook.Sheets)
+		
+		const wbook = XLS.write(workbook, {bookType: 'xlsx', bookSST: true, type: 'binary'})
+		
+		return wbook
 	}
+	
+	this.percentToRGB = percentToRGB
+	
+	this.cellify = cellify
+	
+	this.singleQuizToSheet = singleQuizToSheet
+	
+	this.parseSingleQuiz = parseSingleQuiz
+	
+	this.s2ab = s2ab
+	
+	this.nQuizToWorkbook = nQuizToWorkbook
+	
+}])
+.factory('downloadResults', ['$window', 'FileSaver', 'Blob', '$translate', 'downloadResultsUtils', function($window, FileSaver, Blob, $translate, downloadResultsUtils){
+	/*
+	 * 
+	 * example object
+	{
+		quizId: 1,
+		answers: [{
+			user: id,
+			totalAnswered: 15,
+			totalQuestons: 20,
+			overall: 60,
+			assigments: [
+				qId: 1
+				queston: "some queston", 
+				answers: [
+					{content: "some answer", id}
+				],
+				answered: [1,2]
+				rightAnswers: [1]
+			]
+		}]
+	}
+	*/
+	
+
+	function parseAllQuizes(newQuiz, isMinimal){
+		const parsedQuiz = newQuiz.quizes.map(x => downloadResultsUtils.parseSingleQuiz(x, isMinimal))
+		console.log("Parsed quiz: ", parsedQuiz)
+		
+		const wbook = downloadResultsUtils.nQuizToWorkbook(parsedQuiz,isMinimal)
+		console.log("Workbook: ", wbook)
+		
+		FileSaver.saveAs(new Blob([downloadResultsUtils.s2ab(wbook)], {type:"application/octet-stream"}), newQuiz.quizId + ".xlsx")
+		
+	}	
+
 	
 	return parseAllQuizes
 }])

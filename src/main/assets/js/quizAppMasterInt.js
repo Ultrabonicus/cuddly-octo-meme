@@ -5,6 +5,7 @@ angular.module("quizAppMaster")
 	.translations('en', enLang)
 	.translations('ru', ruLang)
 	.determinePreferredLanguage()
+	.fallbackLanguage('ru')
 })
 .directive('translation', function(){
 	

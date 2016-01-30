@@ -4,6 +4,7 @@
 
 # karma specific
 /coverage
+unittests.html
 
 # webpack specific
 /node_modules
