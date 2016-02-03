@@ -49,7 +49,7 @@ module.exports = function(config) {
 //			"./src/main/assets/js/quizAppMaster.js": ['webpack'],
 //			"./src/main/assets/js/quizAppUser.js": ['webpack'],
 //			'./main/assets/js/*.js': ['webpack', 'coverage'],
-			'./test/assets/js/*_test.js': ['webpack','sourcemap', 'coverage']
+			'./test/assets/js/*_test.js': ['webpack','sourcemap']
 //            './src/test/assets/js/*_test.js': ['webpack']
 //			'./src/test/assets/js/*_test.js': ['babel']
            // 'test/**/*_test.js': ['webpack']

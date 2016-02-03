@@ -232,11 +232,16 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 			}
 			return answer
 		})
-		return {
+		
+		const parsed = {
 			quizId: quizId,
 			assigments: assigments,
 			maxQuestonsLength: maxQuestonsLength
 		}
+		
+		console.log('parsed quiz is: ', parsed)
+		
+		return parsed
 	}
 	
 	function s2ab(s) {
@@ -247,6 +252,9 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	}	
 	
 	function nQuizToWorkbook(parsedNewQuiz, isMinimal){
+
+		console.log('parsedNewQuiz: ', parsedNewQuiz)
+
 		const firstSheetName = "firstSheet"
 		const firstSheet = {};
 		firstSheet[XLS.utils.encode_cell({c:0,r:0})] = cellify(123)
@@ -264,10 +272,9 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		
 		workbook.Sheets[firstSheetName] = firstSheet
 		
-		console.log("SheetNames: ", workbook.SheetNames)
-		console.log("Sheets: ", workbook.Sheets)
-		
 		const wbook = XLS.write(workbook, {bookType: 'xlsx', bookSST: true, type: 'binary'})
+		
+		console.log('wbook: ', wbook)
 		
 		return wbook
 	}
@@ -328,7 +335,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
 	function postNewQuiz(quiz){
 		
-		var promise = 
+		const promise = 
 			$http.post(
 				$window.location.href,
 				angular.toJson(quiz)
@@ -341,7 +348,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 }])
 
 
-app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate) {
+app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', '$interval', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate, $interval) {
 	
 	$scope.changeLanguage = function(langKey) {
 		console.log("changing language");
@@ -497,11 +504,11 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	
 	dragndrop.subscribe(
 		function(x){
-			console.log(x);
+			console.log('dragndrop onnext: ' ,x);
 			newQuizHelper.push(x)
 		},
 		function(e){
-			console.log(e)
+			console.log('dragndrop onerror: ',e)
 		},
 		function(){
 			console.log("complete", {quizes: newQuizHelper})
@@ -518,13 +525,13 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		handle: null,
 		
 		start(){
-			this.handle = setInterval(function () {
+			this.handle = $interval(function () {
 			send({"code":1})
 			}, 3000)
 		},
 		
 		stop(){
-			clearInterval(this.handle)
+			$interval.cancel(this.handle)
 		}
 		
 	}
