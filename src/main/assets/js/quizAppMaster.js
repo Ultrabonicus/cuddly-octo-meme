@@ -346,9 +346,76 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	
 	return postNewQuiz
 }])
+.factory('randomizeQuiz',['$window', function($window){
+	
+	function getRandomNr(min, max) {
+		return Math.floor(Math.random() * (max - min + 1)) + min
+	}
+	
+	function roundr(groupedAssigments, groups, total){
+		let timesUsed = {}
+		Object.keys(groups).forEach(x => Object.keys(groups).forEach(x => timesUsed[x] = 0))
+		return 'unimplemented'
+	}
+	
+	function random(groupedAssigments, groups, total){
+		let arr = new Array(total)
+		for(let i = 0; i !== arr.length; i++){
+			const maxGroupNr = Object.keys(groups).reduce((acc,x)=>(x > acc ? x : acc),0)
+			console.log('max: ', maxGroupNr)
+			let arrH = []
+			for(let y = 0; y <= maxGroupNr; y++){
+				console.log('pre', groupedAssigments[y], y)
+				if(typeof groupedAssigments[y] === 'undefined'){
+					continue
+				}
+				let quantityNeeded = groups[y]
+				console.log('quantityNeeded: ', quantityNeeded)
+				let assigments = groupedAssigments[y]
+				let usedIndexes = []
+				let unusedIndexes = []
+				for(let b = 0; b < assigments.length; b++) {
+					unusedIndexes.push(b)
+				}
+				for(let z = 0; z !== quantityNeeded; z++){
+					let randomIndex
+					if (unusedIndexes.length > 1){
+						do {
+							randomIndex = getRandomNr(0, unusedIndexes.length - 1)
+						} while(usedIndexes.indexOf(randomIndex) !== -1)
+					} else if (unusedIndexes.length === 1) {
+						randomIndex = 0
+					} else {
+						break
+					}
+					arrH.push(assigments[unusedIndexes[randomIndex]])
+					usedIndexes.push(unusedIndexes[randomIndex])
+					unusedIndexes = unusedIndexes.filter(x => x!==unusedIndexes[randomIndex])
+					console.log('rindex :', randomIndex, 'z: ', z, 'saving: ', assigments[unusedIndexes[randomIndex]], 'used: ', usedIndexes, 'unused: ', unusedIndexes)
+					if(unusedIndexes.length === 0) break
+				}
+			}
+			arr[i] = new Quiz(i, arrH)
+		}
+		
+		console.log('random result: ', arr)
+		return arr
+	}
+	
+	function randomizeQuiz(arrayOfAssigments, groups, total, strategy){
+		let grouped = []
+		arrayOfAssigments.forEach(x => grouped[x.group] instanceof Array ? grouped[x.group].push(x.assigment) : grouped[x.group] = [x.assigment])
+		const resF = strategy === 'random' ? random : roundr
+		console.log('grouped: ', grouped)
+		return {quizes: resF(grouped,groups,total)}
+	}
+	
+	return randomizeQuiz
+}])
 
 
 app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', '$interval', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate, $interval) {
+	
 	
 	$scope.changeLanguage = function(langKey) {
 		console.log("changing language");

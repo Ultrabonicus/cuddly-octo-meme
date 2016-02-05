@@ -2,13 +2,18 @@ const quizApp = require('../../../main/assets/js/quizAppMaster.js')
 
 const mocks = require('angular-mocks')
 
+import Assigment from '../../../main/assets/js/classes/Assigment';
+import Answer from '../../../main/assets/js/classes/Answer';
+import Queston from '../../../main/assets/js/classes/Queston'; 
+import Quiz from '../../../main/assets/js/classes/Quiz'; 
+
 const _ = require('lodash')
 
 
 
 describe("quizAppMaster", function(){
 		
-	let $httpBackend, $window, $controller, sendNewQuiz, downloadResults, downloadResultsUtils
+	let $httpBackend, $window, $controller, sendNewQuiz, downloadResults, downloadResultsUtils, randomizeQuiz
 	
 	beforeEach(function () {
 			
@@ -26,6 +31,7 @@ describe("quizAppMaster", function(){
 			
 			downloadResultsUtils = $injector.get('downloadResultsUtils')
 			
+			randomizeQuiz = $injector.get('randomizeQuiz')
 		})
 		
 	})
@@ -160,13 +166,107 @@ describe("quizAppMaster", function(){
 		
 	})
 	
-	describe('controller', function(){
-		
-	})
-	
-})
+	describe('randomizeQuiz', function(){
+		describe('should generate basic object with 2 quizes in expected format', function(){
+			
+			const given = [
+				{
+					assigment: new Assigment(
+						new Queston(1, 'first queston'),
+						[
+							new Answer(1, 'answer1'),
+							new Answer(2, 'answer2'),
+							new Answer(3, 'answer3')
+						],
+						[1,2]
+					),
+					group: 1
+				},{
+					assigment: new Assigment(
+						new Queston(2, 'second queston'),
+						[
+							new Answer(1, 'answerb1'),
+							new Answer(2, 'answerb2')
+						],
+						[1]
+					),
+					group: 1
+				},{
+					assigment: new Assigment(
+						new Queston(3, 'third queston'),
+						[
+							new Answer(1, 'answerc1'),
+							new Answer(2, 'answerc2'),
+							new Answer(3, 'answerc3')
+						],
+						[3]
+					),
+					group: 1
+				},{
+					assigment: new Assigment(
+						new Queston(4, 'fourth queston'),
+						[
+							new Answer(1, 'answerx1'),
+							new Answer(2, 'answerx2'),
+							new Answer(3, 'answerx3'),
+							new Answer(4, 'answerx4')
+						],
+						[3,4]
+					),
+					group: 2
+				},{
+					assigment: new Assigment(
+						new Queston(5, 'fifth queston'),
+						[
+							new Answer(1, 'answerz1'),
+							new Answer(2, 'answerz2'),
+							new Answer(3, 'answerz3')
+						],
+						[3]
+					),
+					group: 2
+				}
+			]
+			
+			const expected = {
+				asymmetricMatch: function(actual) {
+					const fromFirstGroup = [1,2,3].some(x => x === actual[0].queston.id)
+					const fromSecondGroup = [4,5].some(x => x === actual[1].queston.id)
+					return fromFirstGroup && fromSecondGroup
+				}
+			}
+			
+			console.log('rquiz: ', randomizeQuiz)
+			
+//			console.log(randomizeQuiz(given, {1:1, 2:1}, 2, 'random'))
+			
+			it('length should be equal to sum of third argument', function() {
+				expect(randomizeQuiz(given, {1:1, 2:1}, 2, 'random').quizes.length).toEqual(2)
+			})
+			
+			it('length should be equal to sum of second argument', function() {
+				expect(randomizeQuiz(given, {1:1, 2:1}, 2, 'random').quizes[0].assigments.length).toEqual(2)
+			})
+			
+			it('length should be equal to sum of second argument [3]', function() {
+				expect(randomizeQuiz(given, {1:1, 2:2}, 2, 'random').quizes[0].assigments.length).toEqual(3)
+			})
+			
+			it("length shouldn't be larger than possible even if requested number is larger", function() {
+				expect(randomizeQuiz(given, {1:1, 2:4}, 2, 'random').quizes[0].assigments.length).toEqual(3)
+			})
+			
+			it('groups should match second argument and be in correct order', function(){
+				expect(randomizeQuiz(given, {1:1, 2:1}, 2, 'random').quizes[0].assigments).toEqual(expected)
+			})
 
-describe('quizAppMaster controller', function() {
+			it('type of assigment field should be Quiz', function(){
+				expect(randomizeQuiz(given, {1:1, 2:1}, 2, 'random').quizes[0]).toEqual(jasmine.any(Quiz))
+			})
+		})
+})
+})	
+	describe('quizAppMaster controller', function() {
 	beforeEach(function() {
 		
 		const createMasterConnection = function($window, rx, $timeout){
@@ -249,3 +349,5 @@ describe('quizAppMaster controller', function() {
 		})
 	})
 })
+	
+
