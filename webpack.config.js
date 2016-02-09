@@ -79,10 +79,7 @@ var config = {
 			test: /\.html$/,
 			loader: 'ngtemplate?relativeTo=' + (path.resolve(__dirname, './src/main/assets/js/angular_templates')) + '/!html',
 		}]
-	}
-	
-	
-	,
+	},
 
     node: {
             fs: 'empty'
@@ -125,7 +122,9 @@ if (NODE_ENV == 'production') {
 				warnings:     false,
 				drop_console: true,
 				unsafe:       true
-			}
+			},
+			
+			mangle: false
 		})
 	);
 }

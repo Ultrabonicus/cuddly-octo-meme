@@ -7,6 +7,7 @@ import Quiz from './classes/Quiz';
 import AnswerStatusWithUserAnswer from './classes/AnswerStatusWithUserAnswer'; 
 import AnswerStatus from './classes/AnswerStatus'; 
 import FilledUserAnswer from './classes/FilledUserAnswer';
+import AnswerChecked from './classes/AnswerChecked';
 require('angular-file-saver');
 require('rx');
 require('rx-angular');
@@ -58,8 +59,9 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	var drop = rx.Observable.fromEvent(dropTarget, 'drop')
 	var dragover = rx.Observable.fromEvent(dropTarget, 'dragover')
 	
-	dragover.subscribeOnNext(function(elem){
-		elem.preventDefault();
+	dragover.subscribeOnNext( e =>{
+		e.stopPropagation();
+		e.preventDefault();
 	})
 	
 	drop.subscribeOnNext(handleDrop)
@@ -68,38 +70,48 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		console.log("started handling drop")
 		e.stopPropagation();
 		e.preventDefault();
-		var files = e.dataTransfer.files;
-		var i,f;
-		for (i = 0, f = files[i]; i != files.length; ++i) {
-			var reader = new FileReader();
-			var name = f.name;
+		let files = e.dataTransfer.files;
+//		let i,f;
+//		for (let i = 0, f = files[i]; i != files.length; ++i) {
+			const f = files[0]
+			const reader = new FileReader();
+			const name = f.name;
 			reader.onload = function(e) {
-				var data = e.target.result;
+				let data = e.target.result;
 				/* if binary string, read with type 'binary' */
-				var workbook = XLS.read(data, {type: 'binary'});
+				let workbook = XLS.read(data, {type: 'binary'});
 				
 				console.log(workbook)
 				
-				var sheet_name_list = workbook.SheetNames;
+				let sheet_name_list = workbook.SheetNames;
 				
 				console.log(sheet_name_list[0])
 				
-				for(var i = 0; sheet_name_list.length > i; i++){
+				for(let i = 0; sheet_name_list.length > i; i++){
 				
-					var sheet = XLS.utils.sheet_to_json(workbook.Sheets[sheet_name_list[i]])
-				
-					observable.onNext(parseJsonToAssigment(sheet, i+1))
+					const parsed = XLS.utils.sheet_to_json(workbook.Sheets[sheet_name_list[i]])
+					
+					console.log('with group?', Object.keys(parsed[0]).indexOf('group'))
+					
+					if(Object.keys(parsed[0]).indexOf('group') === -1){
+						observable.onNext({value: parseJsonToAssigment(parsed, i+1),       type: 'complete'})
+					} else {
+						observable.onNext({value: parseJsonToAssigment(parsed, i+1, true), type: 'grouped' })
+					}
 				}
 				
 				observable.onCompleted()
-
 				
 			};
 			reader.readAsBinaryString(f);
-			}
+//			}
+			
 		}
 	
-	function parseJsonToAssigment(sheet, id) {
+	function parseJsonToAssigment(sheet, id, grouped) {
+		
+		console.log('parsing to assigment')
+		
 		var newObject = {}
 		
 		newObject.id = id
@@ -118,7 +130,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 				return answersArray
 			}
 			let answers = parseAnswers(row)
-			newObject.assigments[i] = new Assigment(queston, answers, solution)
+			newObject.assigments[i] = grouped ? {group: row.group,  assigment: new Assigment(queston, answers, solution) } : new Assigment(queston, answers, solution) 
 		}
 		
 		return newObject
@@ -127,10 +139,26 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		
 	})
 	
-	return source
+	const result = rx.Observable.create(function(observable){
+		let arrayHelper = []
+		source.subscribe(
+			x => {
+				arrayHelper.push(x)
+			},
+			e => {
+				console.error('error at dragndrop')
+				observable.onError()
+			},
+			() => {
+				observable.onNext(arrayHelper)
+				observable.onCompleted()
+			}
+		)
+	})
 	
+	return result
 }])
-.service('downloadResultsUtils', ['$translate', function($translate){
+.factory('downloadResultsUtils', ['$translate', function($translate){
 	
 	function percentToRGB(red, green, blue){
 		function percentToHex(percent){
@@ -279,18 +307,23 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 		return wbook
 	}
 	
-	this.percentToRGB = percentToRGB
+	let obj = {
 	
-	this.cellify = cellify
+	percentToRGB: percentToRGB,
 	
-	this.singleQuizToSheet = singleQuizToSheet
+	cellify: cellify,
 	
-	this.parseSingleQuiz = parseSingleQuiz
+	singleQuizToSheet: singleQuizToSheet,
 	
-	this.s2ab = s2ab
+	parseSingleQuiz: parseSingleQuiz,
 	
-	this.nQuizToWorkbook = nQuizToWorkbook
+	s2ab: s2ab,
 	
+	nQuizToWorkbook: nQuizToWorkbook
+	
+	}
+	
+	return obj
 }])
 .factory('downloadResults', ['$window', 'FileSaver', 'Blob', '$translate', 'downloadResultsUtils', function($window, FileSaver, Blob, $translate, downloadResultsUtils){
 	/*
@@ -388,7 +421,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 					} else {
 						break
 					}
-					arrH.push(assigments[unusedIndexes[randomIndex]])
+					arrH.push(angular.copy(assigments[unusedIndexes[randomIndex]])) // deep copy required
 					usedIndexes.push(unusedIndexes[randomIndex])
 					unusedIndexes = unusedIndexes.filter(x => x!==unusedIndexes[randomIndex])
 					console.log('rindex :', randomIndex, 'z: ', z, 'saving: ', assigments[unusedIndexes[randomIndex]], 'used: ', usedIndexes, 'unused: ', unusedIndexes)
@@ -411,10 +444,43 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 	}
 	
 	return randomizeQuiz
-}])
+}])/*
+.factory('parseToWorking', function(){
+	function toWorkingQuiz(quizes){
+			let transformedQuizes
+			if(quizes !== undefined){
+				console.log("quizes defined, quizes object: ", quizes)
+//				let quizes = newQuiz.quizes
+				
+				transformedQuizes = quizes.map(function(quiz){
+					let transformed = quiz
+					transformed.assigments = quiz.assigments.map(function(assigment){
+						let transformed2 = assigment
+						transformed2.answers = assigment.answers.map(function(answer){
+							console.log("transforming")
+							return answer
+//							return new AnswerChecked(angular.copy(answer.id),angular.copy(answer.content),false)
+//							return new AnswerChecked(JSON.parse(angular.toJson(answer.id)),JSON.parse(angular.toJson(answer.content)),false) //answer.addChecked()
+						})
+						return transformed2
+					})
+					return transformed
+				})
+				
+			} else {
+				console.error("quizes is undefined! quizes object: ", quizes)
+			}
+			
+			return transformedQuizes
+	}
+	
+	return {
+		toWorkingQuiz: toWorkingQuiz
+	}
+})
+*/
 
-
-app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', '$interval', function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate, $interval) {
+app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dragndrop', 'sendNewQuiz', 'downloadResults', '$translate', '$interval', 'randomizeQuiz', /*'parseToWorking',*/ function(rx, $window, $scope, createMasterConnection, dragndrop, sendNewQuiz, downloadResults, $translate, $interval, randomizeQuiz /*, parseToWorking*/) {
 	
 	
 	$scope.changeLanguage = function(langKey) {
@@ -433,13 +499,16 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 				if(this.quizId === 0) {
 					alert("Wrong Id")
 				} else {
-					startWSconnection(this.quizId, !isNewQuizPresent)
+/*					if(isNewQuizPresent === true){
+						const quizes = parseToWorking.toWorkingQuiz($scope.newQuiz.quizes)
+						$scope.newQuiz.quizes = quizes
+						$scope.$apply()
+					} */
 					this.hide = true
 					this.isConnected = true
 					$scope.hideDrop = true
-					if(isNewQuizPresent === true){
-						$scope.toWorkingQuiz()
-					}
+					startWSconnection(this.quizId, !isNewQuizPresent)
+//					if(isNewQuizPresent === true) $scope.$apply()
 					
 				}
 			}
@@ -506,23 +575,6 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 		return parsed
 	}
 	
-	$scope.toWorkingQuiz = function (){
-			if($scope.newQuiz.quizes !== undefined){
-				console.log("quizes defined, newQuiz object: ", $scope.newQuiz)
-				var quizes = $scope.newQuiz.quizes
-				quizes.forEach(function(quiz){
-					quiz.assigments.forEach(function(assigment){
-						assigment.answers.forEach(function(answer){
-							answer.addChecked()
-							console.log("transforming")
-						})
-					})
-				})
-			} else {
-				console.warn("quizes is undefined! newQuiz object: ", $scope.newQuiz)
-			}
-	}
-	
 	$scope.sendNewQuiz = {
 			hide: true,
 			sendNewQuizToServer: function(){
@@ -565,10 +617,31 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	
 	$scope.newQuiz = {}
 	
-	let newQuizHelper = []
-	
 	$scope.hideDrop = false
 	
+	dragndrop.subscribe(
+		function(x){
+			console.log('dragndrop onnext: ' , x);
+			if(x[0].type === 'complete'){
+				$scope.newQuiz = {quizes: addQuestonLengthField(x.map(z=>z.value)), quizId: $scope.connectionInfo.quizId}
+			}else if(x[0].type === 'grouped'){
+				const randomized = addQuestonLengthField(randomizeQuiz(x[0].value.assigments, {1:2,2:4,3:2}, 50, 'random').quizes)
+				$scope.newQuiz = {quizes: randomized, quizId: $scope.connectionInfo.quizId}
+				console.log('at grouped: ', x, randomized)
+			}
+		},
+		function(e){
+			console.log('dragndrop onerror: ',e)
+		},
+		function(){
+			console.log("complete inside controller")
+//			$scope.newQuiz = {quizes: addQuestonLengthField(newQuizHelper), quizId: $scope.connectionInfo.quizId}
+			$scope.hideDrop = true
+			$scope.sendNewQuiz.hide = false
+			$scope.$apply()
+		}
+	)
+	/*
 	dragndrop.subscribe(
 		function(x){
 			console.log('dragndrop onnext: ' ,x);
@@ -585,7 +658,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 			$scope.$apply()
 			newQuizHelper = []
 		}
-	)
+	) */
 	
 	const autoupdate = {
 		
@@ -617,8 +690,8 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 						break;
 					case 1102:
 						console.log("recived 1102", json.load);
-						$scope.newQuiz = { quizes: addQuestonLengthField(parseNewQuizFromJson(json.load)), quizId: $scope.connectionInfo.quizId }
-						$scope.toWorkingQuiz()
+						$scope.newQuiz = { quizId: $scope.connectionInfo.quizId }
+						$scope.newQuiz.quizes = /*parseToWorking.toWorkingQuiz(*/addQuestonLengthField(parseNewQuizFromJson(json.load))//)
 						$scope.$apply()
 						break;
 					case 1103:

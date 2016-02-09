@@ -35,24 +35,11 @@ module.exports = function(config) {
 		},
 		
         files: [
-            // all files ending in "_test"
-//			"./main/assets/js/*.js",
-//			'./../node_modules/angular/angular.js',
-//			'./../node_modules/angular-mocks/angular-mocks.js',
             './test/assets/js/*_test.js'
-            //'test/**/*_test.js'
-            // each file acts as entry point for the webpack configuration
         ],
 
         preprocessors: {
-            // add webpack as preprocessor
-//			"./src/main/assets/js/quizAppMaster.js": ['webpack'],
-//			"./src/main/assets/js/quizAppUser.js": ['webpack'],
-//			'./main/assets/js/*.js': ['webpack', 'coverage'],
 			'./test/assets/js/*_test.js': ['webpack','sourcemap']
-//            './src/test/assets/js/*_test.js': ['webpack']
-//			'./src/test/assets/js/*_test.js': ['babel']
-           // 'test/**/*_test.js': ['webpack']
         },
 
         webpack: webpackcfg,

@@ -1,5 +1,7 @@
 'use strict';
 
+//import AnswerChecked from './AnswerChecked';
+
 export default class Answer {
 	constructor(id, content) {
 		if(!(typeof id === "number")){
@@ -14,9 +16,9 @@ export default class Answer {
 		this.content = content
 	}
 	
-	addChecked(){
-		this.isChecked = false
-	}
+/*	addChecked(){
+		return new AnswerChecked(this.id,this.content,false)
+	}*/
 	
 	isRight(solutionArray){
 		return solutionArray.some(x => x === this.id)
