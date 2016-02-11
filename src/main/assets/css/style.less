@@ -2,25 +2,94 @@
 @red: #B20000;
 
 div.translation {
+	margin: 20px;
 	position: absolute;
 	width: 80px;
 	height: 30px;
-	border: 3px solid @green;
 	right: 10px;
 	top: 10px;
+	display: inline;
+	border-radius: 1px;
+	padding: 0;
 }
 
+button.translate-button {
+	width: 50%;
+	height: 100%;
+	padding: 0;
+	border-radius: 1px;
+}
+
+.container {
+	flex-direction: column;
+	align-content: stretch;
+	max-width: 1200;
+	margin: 0 auto;
+}
+
+.container > * {
+	margin: 30px 0;
+	padding: 10px;
+	background-color: #ECFCC7;
+	border: 1px solid #C3E37D;
+	border-radius: 5px;
+}
+
+body {
+	background-color: #FAEECA;
+	margin:50px;
+	margin-top:30px;
+}
+
+#dragTarget {
+
+}
+/*
+body {
+	margin-top : 50px
+	margin: 1000px
+}
+
+div.translation {
+	position: absolute;
+	width: 80px;
+	height: 30px;
+	border: 1px solid @green;
+	right: 10px;
+	top: 10px;
+	display: inline;
+	border-radius: 1px;
+}
+
+button.translate-button {
+	width: 50%;
+	height: 100%;
+	padding: 0;
+	border-radius: 1px;
+}
+*/
 .border {
 	border: 1px solid black;
 }
 
 table {
+	width: 100%;
 	.border;
 	border-collapse: collapse;
+	background-color: #F2F7E6; 
+}
+
+tbody {
+	width: 100%;
+	margin-bottom: 10px !important;
 }
 
 td, th {
     .border;
+}
+
+th {
+	background-color: #E0E8CF;
 }
 
 td.chosenRight {

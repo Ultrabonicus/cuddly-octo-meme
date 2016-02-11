@@ -22,17 +22,16 @@
 -->
 
 <body>
-	<div class="someclass2" ng-controller="Ctrl">
+	<div class="container" ng-controller="Ctrl">
 		<div class="translation"></div>
-		<div class="someclass" ng-Hide="connectionInfo.hide">
+		<div class="connection" ng-Hide="connectionInfo.hide">
 			<button ng-click="connectionInfo.connect()">{{'CONNECT_BUTTON' | translate}}</button>
 				{{'CONNECT_QUIZ_ID' | translate}}: <input ng-model="connectionInfo.quizId" type="number"/>
 				{{'CONNECT_USER_ID' | translate}}: <input ng-model="connectionInfo.userId" type="number"/>
 		</div>
-		<br/>
-		<div>
+		<div ng-show="quiz.assigments" ng-cloak>
 			<p> {{('ASSIGMENT_NAME' | translate) + ': ' + quiz.id}} </p>
-			<table ng-show="quiz.assigments" ng-cloak>
+			<table>
 				<tr>
 <!--					<th> {{ 'COLUMN_ID' | translate }} </th> -->
 					<th> {{ 'COLUMN_QUESTON' | translate }} </th>

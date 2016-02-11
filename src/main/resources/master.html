@@ -29,27 +29,25 @@
 
 
 <body>
-	<div ng-controller="Ctrl">
+	<div class='container' ng-controller="Ctrl">
 		<div class="translation"></div>
 		<div id="dragTarget" ng-hide="hideDrop">
 			<p>{{ 'DROP_DROP_HERE' | translate }}</p>
-			<hr/>
 		</div>
-		<div class="someclass" ng-hide="connectionInfo.hide">
+		<div class="connection" ng-hide="connectionInfo.hide">
 			<button ng-click="connectionInfo.connect()">{{ 'CONNECT_BTN_NAME' | translate }}</button>
 				{{ 'CONNECT_QUIZ_ID' | translate }}: <input ng-model="connectionInfo.quizId" type="number"/>
 		</div>
 		
 		<div class="generate" ng-hide="generate.hide">
-				<p>{{ 'GENERATE_QUANTITY' | translate }}</p>
-				<input type='number' ng-model=generate.quantity required>
-				<hr/>
-				<button ng-click=generate.add()>{{ 'GENERATE_ADD' | translate }}</button>
+				<p>{{ 'GENERATE_QUANTITY' | translate }}</p><input type='number' ng-model=generate.quantity required>
+				<br/>
 				<div ng-repeat="group in generate.groups track by $index">
 					<input type='number' ng-model='group.key' required></input>
 					<input type='number' ng-model='group.val' required></input>
 					<button ng-click=generate.remove(group.key)>{{ 'GENERATE_REMOVE' | translate }}</button>
 				</div>
+				<button ng-click=generate.add()>{{ 'GENERATE_ADD' | translate }}</button>
 				<button ng-click="generate.generate()"> {{ 'GENERATE_GENERATE' | translate}} </button>
 			<table class="generate-table">
 				<tr>
@@ -61,7 +59,8 @@
 			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>{{ 'SEND_NEW_QUIZ' | translate }}</button>
 			<button ng-click = "download()"> {{ 'DOWNLOAD_RESULT' | translate }} </button>
 			<div ng-cloak>
-			<table ng-repeat="q in newQuiz.quizes">
+			<table>
+				<tbody ng-repeat="q in newQuiz.quizes">
 				<tr><th colspan = '{{q.maxAnswersLength + 3}}'>{{q.id}}</th></tr>
 				<tr>
 					<th> {{ 'COLUMN_ID' | translate }} </th>
@@ -75,6 +74,8 @@
 					<td ng-attr-colspan = "{{ $last ? q.maxAnswersLength - x.answers.length + 1 : 1 }}" ng-repeat="answer in x.answers" ng-class="{chosenWrong: answer.isChecked, chosenRight: answer.isChecked && answer.isRight(x.solution)}"> {{ answer.content }} </td>
 					<td> {{ x.solution }} </td>
 				</tr>
+				</tbody>
+				<br/>
 			</table>
 			</div>
 		</div>
