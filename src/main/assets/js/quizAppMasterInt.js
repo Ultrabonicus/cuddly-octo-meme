@@ -37,8 +37,12 @@ const ruLang = {
 	
 	SPREADSHEET_QUIZ_ID: "ИД опроса",
 	SPREADSHEET_QUESTON_ID: "ИД вопроса/вопрос",
-	SPREADSHEET_ANSWERS: "Правильные ответы/Пользовательские ответы"
+	SPREADSHEET_ANSWERS: "Правильные ответы/Пользовательские ответы",
 	
+	GENERATE_QUANTITY: "Количество",
+	GENERATE_ADD: "Добавить группу",
+	GENERATE_REMOVE: "Удалить группу",
+	GENERATE_GENERATE: "Создать"	
 }
 
 const enLang = {
@@ -58,5 +62,10 @@ const enLang = {
 	
 	SPREADSHEET_QUIZ_ID: "Quiz ID",
 	SPREADSHEET_QUESTON_ID: "Queston ID/Queston",
-	SPREADSHEET_ANSWERS: "Correct answers/User answers"
+	SPREADSHEET_ANSWERS: "Correct answers/User answers",
+
+	GENERATE_QUANTITY: "Quantity",
+	GENERATE_ADD: "Add group",
+	GENERATE_REMOVE: "Remove group",
+	GENERATE_GENERATE: "Generate"	
 }

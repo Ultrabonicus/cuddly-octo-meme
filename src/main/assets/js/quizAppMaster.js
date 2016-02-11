@@ -399,7 +399,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 			let arrH = []
 			for(let y = 0; y <= maxGroupNr; y++){
 				console.log('pre', groupedAssigments[y], y)
-				if(typeof groupedAssigments[y] === 'undefined'){
+				if(typeof groupedAssigments[y] === undefined || groups[y] === undefined){
 					continue
 				}
 				let quantityNeeded = groups[y]
@@ -506,6 +506,7 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 					} */
 					this.hide = true
 					this.isConnected = true
+					$scope.generate.hide = true
 					$scope.hideDrop = true
 					startWSconnection(this.quizId, !isNewQuizPresent)
 //					if(isNewQuizPresent === true) $scope.$apply()
@@ -515,6 +516,48 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 	}
 	
 
+	$scope.generate = {
+		hide: true,
+		quantity: 1,
+		groups: [],
+		add: function(){
+			if(this.groups.length === 0){
+				this.groups[0] = {key:1,val:1}
+			} else {
+				this.groups.push({key:Math.max(...this.groups.map(x=>x.key))+1, val:1})
+			}
+		},
+		remove: function(key){
+			this.groups = this.groups.filter(x=>x.key!==key)
+		},
+		hasDuplicates: function(){
+			let hasD = false
+			let counts = {}
+			this.groups.map(x=>x.key).forEach(x=> {
+				if(counts[x] === undefined) {
+					counts[x] = 1
+				} else {
+					hasD = true
+//					break;
+				}
+			})
+			return hasD
+		},
+		generate: function(){
+			const groupsAsObject = this.groups.reduce((acc,x)=>{acc[x.key] = x.val; return acc},{})
+			const randomized = addQuestonLengthField(randomizeQuiz(assigmentsToGenerate, groupsAsObject, this.quantity, 'random').quizes)
+			$scope.newQuiz = {quizes: randomized, quizId: $scope.connectionInfo.quizId}
+									//TODO array-to-object generate.groups
+		}
+	}
+	
+	let assigmentsToGenerate
+	
+	$scope.$watch('generate.groups', (val,old) => {
+		if($scope.generate.hasDuplicates()){ $scope.generate.groups = old}
+		console.log('changed: ', val, old)
+		},true)
+	
 	
 	$scope.changeChecked = function(userId, questonId, answerIdArray){
 		var quiz = $scope.newQuiz.quizes.find(function(x){
@@ -625,9 +668,11 @@ app.controller('Ctrl', ['rx', '$window', '$scope', 'createMasterConnection', 'dr
 			if(x[0].type === 'complete'){
 				$scope.newQuiz = {quizes: addQuestonLengthField(x.map(z=>z.value)), quizId: $scope.connectionInfo.quizId}
 			}else if(x[0].type === 'grouped'){
-				const randomized = addQuestonLengthField(randomizeQuiz(x[0].value.assigments, {1:2,2:4,3:2}, 50, 'random').quizes)
-				$scope.newQuiz = {quizes: randomized, quizId: $scope.connectionInfo.quizId}
-				console.log('at grouped: ', x, randomized)
+//				const randomized = addQuestonLengthField(randomizeQuiz(x[0].value.assigments, {1:2,2:4,3:2}, 50, 'random').quizes)
+				$scope.generate.hide = false
+				assigmentsToGenerate = x[0].value.assigments
+//				$scope.newQuiz = {quizes: randomized, quizId: $scope.connectionInfo.quizId}
+//				console.log('at grouped: ', x, randomized)
 			}
 		},
 		function(e){
