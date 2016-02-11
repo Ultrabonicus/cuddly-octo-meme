@@ -428,7 +428,7 @@ app.factory('createMasterConnection', ['$window', 'rx', function($window, rx) {
 					if(unusedIndexes.length === 0) break
 				}
 			}
-			arr[i] = new Quiz(i, arrH)
+			arr[i] = new Quiz(i + 1, arrH)
 		}
 		
 		console.log('random result: ', arr)

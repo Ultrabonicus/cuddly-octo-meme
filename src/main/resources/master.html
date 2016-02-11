@@ -33,11 +33,28 @@
 		<div class="translation"></div>
 		<div id="dragTarget" ng-hide="hideDrop">
 			<p>{{ 'DROP_DROP_HERE' | translate }}</p>
-		<hr/>
+			<hr/>
 		</div>
-		<div class="someclass" ng-Hide="connectionInfo.hide">
+		<div class="someclass" ng-hide="connectionInfo.hide">
 			<button ng-click="connectionInfo.connect()">{{ 'CONNECT_BTN_NAME' | translate }}</button>
 				{{ 'CONNECT_QUIZ_ID' | translate }}: <input ng-model="connectionInfo.quizId" type="number"/>
+		</div>
+		
+		<div class="generate" ng-hide="generate.hide">
+				<p>{{ 'GENERATE_QUANTITY' | translate }}</p>
+				<input type='number' ng-model=generate.quantity required>
+				<hr/>
+				<button ng-click=generate.add()>{{ 'GENERATE_ADD' | translate }}</button>
+				<div ng-repeat="group in generate.groups track by $index">
+					<input type='number' ng-model='group.key' required></input>
+					<input type='number' ng-model='group.val' required></input>
+					<button ng-click=generate.remove(group.key)>{{ 'GENERATE_REMOVE' | translate }}</button>
+				</div>
+				<button ng-click="generate.generate()"> {{ 'GENERATE_GENERATE' | translate}} </button>
+			<table class="generate-table">
+				<tr>
+				</tr>
+			</table>
 		</div>
 		
 		<div class="main-table" ng-show="newQuiz.quizes">
@@ -45,12 +62,12 @@
 			<button ng-click = "download()"> {{ 'DOWNLOAD_RESULT' | translate }} </button>
 			<div ng-cloak>
 			<table ng-repeat="q in newQuiz.quizes">
-				<tr><th colspan = '100'>{{q.id}}</th></tr>
+				<tr><th colspan = '{{q.maxAnswersLength + 3}}'>{{q.id}}</th></tr>
 				<tr>
 					<th> {{ 'COLUMN_ID' | translate }} </th>
 					<th> {{ 'COLUMN_QUESTON' | translate }} </th>
 					<th ng-attr-colspan = "{{ q.maxAnswersLength }}"> {{ 'COLUMN_ANSWERS' | translate }} </th>
-					<th>{{ 'COLUMN_CORRECT_ANSWERS' | translate}}<th>
+					<th>{{ 'COLUMN_CORRECT_ANSWERS' | translate}}</th>
 				</tr>
 				<tr ng-repeat="x in q.assigments">
 					<td> {{ x.queston.id }} </td>
