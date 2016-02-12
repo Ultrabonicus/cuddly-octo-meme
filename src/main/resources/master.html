@@ -58,9 +58,9 @@
 		<div class="main-table" ng-show="newQuiz.quizes">
 			<button ng-hide = "sendNewQuiz.hide" ng-click="sendNewQuiz.sendNewQuizToServer()" ng-cloak>{{ 'SEND_NEW_QUIZ' | translate }}</button>
 			<button ng-click = "download()"> {{ 'DOWNLOAD_RESULT' | translate }} </button>
-			<div ng-cloak>
+			<div class="tables" ng-repeat="q in newQuiz.quizes" ng-cloak>
 			<table>
-				<tbody ng-repeat="q in newQuiz.quizes">
+				<tbody>
 				<tr><th colspan = '{{q.maxAnswersLength + 3}}'>{{q.id}}</th></tr>
 				<tr>
 					<th> {{ 'COLUMN_ID' | translate }} </th>
@@ -75,7 +75,6 @@
 					<td> {{ x.solution }} </td>
 				</tr>
 				</tbody>
-				<br/>
 			</table>
 			</div>
 		</div>
