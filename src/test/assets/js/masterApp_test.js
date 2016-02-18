@@ -327,7 +327,8 @@ describe("quizAppMaster", function(){
 		
 		it('get from server WS connection', function(){
 			let $scope = {
-				$apply: function(){}
+				$apply: function(){},
+				$watch: angular.identity
 			}
 			const controller = $controller('Ctrl', {$scope: $scope})
 			$scope.connectionInfo.quizId = 1
